@@ -1,6 +1,6 @@
 import { PDFViewer } from '@react-pdf/renderer';
 import { InspectionPDFDocument } from './PDFDocument';
-import type { InspectionForm } from '../types';
+import type { InspectionForm } from './types';
 
 interface PDFPreviewProps {
   data: InspectionForm;
