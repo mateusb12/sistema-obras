@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Moon, Sun, FileText } from 'lucide-react';
 import { useDarkMode } from './hooks/useDarkMode';
-import type { InspectionForm } from './types';
-import { ProjectHeaderForm } from './components/ProjectHeaderForm';
-import { TeamList } from './components/TeamList';
-import { InspectionChecklist } from './components/InspectionChecklist';
-import { ObservationsForm } from './components/ObservationsForm';
-import { PDFPreview } from './components/PDFPreview';
+import {
+  type InspectionForm,
+  ProjectHeaderForm,
+  TeamList,
+  InspectionChecklist,
+  ObservationsForm,
+  PDFPreview,
+} from './features/site-inspection-report';
 
 function App() {
   const { isDark, toggleDarkMode } = useDarkMode();
