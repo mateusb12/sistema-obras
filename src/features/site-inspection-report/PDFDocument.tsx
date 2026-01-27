@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import type { InspectionForm } from './types';
+const logoUrl = new URL('../../assets/casasmanagerdark.png', import.meta.url).href;
 
 const styles = StyleSheet.create({
   page: {
@@ -7,6 +8,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'Helvetica',
     backgroundColor: '#ffffff',
+  },
+  logo: {
+    width: 90,
+    height: 'auto',
+    marginBottom: 10,
+    marginLeft: -5,
   },
   header: {
     marginBottom: 20,
@@ -92,6 +99,7 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
         <Page size="A4" style={styles.page}>
           {/* Header Section */}
           <View style={styles.header}>
+            <Image src={logoUrl} style={styles.logo} />
             <Text style={styles.title}>Relatório de Inspeção Digital</Text>
             <View style={styles.row}>
               <Text style={styles.label}>Projeto:</Text>
