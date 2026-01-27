@@ -10,11 +10,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   logo: {
-    width: 90,
+    width: 180,
     height: 'auto',
     marginBottom: 10,
     marginLeft: -5,
   },
+  logoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+
   header: {
     marginBottom: 20,
     borderBottom: '2px solid #000',
@@ -99,7 +105,9 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
         <Page size="A4" style={styles.page}>
           {/* Header Section */}
           <View style={styles.header}>
-            <Image src={logoUrl} style={styles.logo} />
+            <View style={styles.logoContainer}>
+              <Image src={logoUrl} style={styles.logo} />
+            </View>
             <Text style={styles.title}>Relatório de Inspeção Digital</Text>
             <View style={styles.row}>
               <Text style={styles.label}>Projeto:</Text>
