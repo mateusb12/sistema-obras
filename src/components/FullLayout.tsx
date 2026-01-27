@@ -14,10 +14,10 @@ export function FullLayout() {
               <FileText className="text-blue-600 dark:text-blue-400" size={32} />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Digital Inspection
+                  Inspeção Digital
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Replace paper forms with digital precision
+                  Troque o papel pela eficiência digital
                 </p>
               </div>
             </div>
