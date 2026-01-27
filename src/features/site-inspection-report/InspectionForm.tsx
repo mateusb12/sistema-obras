@@ -1,6 +1,10 @@
 import { useState } from 'react';
-// Adicionei Building2, Home e Hammer para os ícones dos projetos
-import { Plus, Trash2, CheckCircle, XCircle, MinusCircle, Building2, Home, Hammer } from 'lucide-react';
+// Adicionei novos ícones para o Checklist (BrickWall, PaintRoller, ShieldCheck, ClipboardList)
+import {
+  Plus, Trash2, CheckCircle, XCircle, MinusCircle,
+  Building2, Home, Hammer,
+  BrickWall, PaintRoller, ShieldCheck, ClipboardList
+} from 'lucide-react';
 import type { UseFormRegister } from 'react-hook-form';
 import type {
   InspectionForm as InspectionFormType,
@@ -9,10 +13,9 @@ import type {
 } from './types';
 
 /* ============================================
-   🔹 DADOS ENRIQUECIDOS (Projetos em Cards)
+   🔹 DADOS ENRIQUECIDOS
    ============================================ */
 
-// Transformamos o array simples em objetos para ter Ícone, Título e Descrição
 const PROJECT_CARDS = [
   {
     id: "Flamboyant II",
@@ -76,6 +79,16 @@ const CHECKLIST_PRESETS = [
   { category: "Segurança", description: "Uso correto de EPIs pela equipe" },
 ];
 
+// Helper para pegar ícone baseado na categoria
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case 'Alvenaria': return BrickWall;
+    case 'Acabamento': return PaintRoller;
+    case 'Segurança': return ShieldCheck;
+    default: return ClipboardList;
+  }
+};
+
 const INPUT_CLASS = "w-full px-3 py-2 border rounded-md text-gray-900 dark:text-white bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors";
 
 /* ============================================
@@ -88,7 +101,6 @@ interface InspectionFormProps {
   onTeamChange: (team: TeamMember[]) => void;
   checklist: ChecklistItem[];
   onChecklistChange: (checklist: ChecklistItem[]) => void;
-  // NOVAS PROPS para controlar a seleção do projeto
   selectedProject: string;
   onProjectChange: (projectName: string) => void;
 }
@@ -99,14 +111,14 @@ export function InspectionForm({
                                  onTeamChange,
                                  checklist,
                                  onChecklistChange,
-                                 selectedProject, // Recebe valor atual
-                                 onProjectChange, // Recebe função para alterar
+                                 selectedProject,
+                                 onProjectChange,
                                }: InspectionFormProps) {
 
   const [newMember, setNewMember] = useState({ name: '', role: '' });
   const [newItem, setNewItem] = useState({ category: '', description: '' });
 
-  // ... (Funções de Equipe e Checklist mantidas iguais) ...
+  // --- Handlers de Equipe ---
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedName = e.target.value;
     const foundMember = PREDEFINED_MEMBERS.find(m => m.name === selectedName);
@@ -128,19 +140,17 @@ export function InspectionForm({
     onTeamChange(team.filter((m) => m.id !== id));
   };
 
-  const handleItemSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedDesc = e.target.value;
-    const foundItem = CHECKLIST_PRESETS.find(i => i.description === selectedDesc);
-    if (foundItem) {
-      setNewItem({ category: foundItem.category, description: foundItem.description });
-    } else {
-      setNewItem({ ...newItem, description: selectedDesc });
-    }
+  // --- Handlers de Checklist (Modificados para Cards) ---
+
+  // Função chamada ao clicar no CARD do preset
+  const handlePresetClick = (preset: { category: string, description: string }) => {
+    setNewItem({ category: preset.category, description: preset.description });
   };
 
   const handleAddChecklistItem = () => {
     if (newItem.category && newItem.description) {
       onChecklistChange([...checklist, { id: crypto.randomUUID(), category: newItem.category, description: newItem.description, status: 'na' }]);
+      // Opcional: Limpar após adicionar ou manter para adicionar similares? Vamos limpar.
       setNewItem({ category: '', description: '' });
     }
   };
@@ -162,13 +172,10 @@ export function InspectionForm({
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Informações do Projeto</h2>
 
-          {/* Nome do Projeto (AGORA EM CARDS) */}
           <div>
             <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
               Selecione o Projeto
             </label>
-
-            {/* Grid de Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {PROJECT_CARDS.map((project) => {
                 const isSelected = selectedProject === project.id;
@@ -185,12 +192,9 @@ export function InspectionForm({
                             : "border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800 bg-white dark:bg-gray-800"}
                     `}
                     >
-                      {/* Ícone à esquerda */}
                       <div className={`p-2 rounded-md ${isSelected ? 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
                         <Icon size={24} />
                       </div>
-
-                      {/* Texto */}
                       <div className="flex-1">
                         <p className={`font-semibold ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-white'}`}>
                           {project.title}
@@ -199,8 +203,6 @@ export function InspectionForm({
                           {project.description}
                         </p>
                       </div>
-
-                      {/* Badge de Check (Canto superior direito) */}
                       {isSelected && (
                           <div className="absolute top-[-10px] right-[-10px] bg-blue-600 text-white rounded-full p-1 shadow-md border-2 border-white dark:border-gray-900">
                             <div className="w-3 h-3 flex items-center justify-center">✓</div>
@@ -210,13 +212,9 @@ export function InspectionForm({
                 );
               })}
             </div>
-
-            {/* Input escondido para garantir que o react-hook-form registre o valor se necessário,
-                embora a abordagem via props no pai seja mais limpa para componentes customizados */}
             <input type="hidden" {...register("header.projectName")} />
           </div>
 
-          {/* Localização (DROPDOWN - Mantido conforme original, ou pode converter também se quiser) */}
           <div className="mt-4">
             <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Localização / Unidade</label>
             <select {...register("header.location")} className={INPUT_CLASS}>
@@ -226,37 +224,25 @@ export function InspectionForm({
             </select>
           </div>
 
-          {/* ... Restante dos inputs (Data, Inspetor) permanecem iguais ... */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Data</label>
-              <input
-                  {...register('header.date')}
-                  type="date"
-                  className={`${INPUT_CLASS} dark:[color-scheme:dark]`}
-              />
+              <input {...register('header.date')} type="date" className={`${INPUT_CLASS} dark:[color-scheme:dark]`} />
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Nome do Inspetor</label>
-              <input
-                  {...register('header.inspectorName')}
-                  type="text"
-                  className={INPUT_CLASS}
-                  placeholder="Nome do inspetor"
-              />
+              <input {...register('header.inspectorName')} type="text" className={INPUT_CLASS} placeholder="Nome do inspetor" />
             </div>
           </div>
         </div>
 
         <hr className="border-gray-200 dark:border-gray-700" />
 
-        {/* ... (Seções de Equipe, Checklist e Obs mantidas exatamente iguais ao original) ... */}
-        {/* Apenas copiando o render final para manter a estrutura, assumindo que o resto do código está lá */}
+        {/* =======================
+          Equipe
+      ======================== */}
         <div className="space-y-4">
-          {/* Renderização da Equipe (Team) - Código Original */}
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Equipe</h2>
-          {/* ... lógica de equipe ... */}
           <div className="space-y-2">
             {team.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-md">
@@ -285,16 +271,24 @@ export function InspectionForm({
 
         <hr className="border-gray-200 dark:border-gray-700" />
 
+        {/* =======================
+          Checklist de Inspeção (AGORA COM CARDS)
+      ======================== */}
         <div className="space-y-4">
-          {/* Renderização do Checklist - Código Original */}
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Checklist de Inspeção</h2>
-          <div className="space-y-3">
+
+          {/* Lista de Itens já adicionados (Mantido igual) */}
+          <div className="space-y-3 mb-6">
             {checklist.map((item) => (
                 <div key={item.id} className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg space-y-3 shadow-sm">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0 pr-2">
-                      <p className="font-semibold text-gray-900 dark:text-white">{item.category}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                      {item.category}
+                    </span>
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-200">{item.description}</p>
                     </div>
                     <button onClick={() => handleRemoveChecklistItem(item.id)} className="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 rounded-md"><Trash2 size={18} /></button>
                   </div>
@@ -306,22 +300,88 @@ export function InspectionForm({
                 </div>
             ))}
           </div>
-          <div className="space-y-3 pt-2">
-            <div className="grid grid-cols-1 gap-3">
-              <select value={newItem.description} onChange={handleItemSelect} className={INPUT_CLASS}>
-                <option value="">Selecione um item da ficha...</option>
-                {CHECKLIST_PRESETS.map((item, index) => (<option key={index} value={item.description}>{item.description}</option>))}
-              </select>
-              <input type="text" placeholder="Categoria (ex.: Segurança...)" value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })} className={INPUT_CLASS}/>
+
+          {/* Seleção de Novo Item (Estilo Cards) */}
+          <div className="space-y-4 pt-2 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-100 dark:border-gray-800">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Passo 1: Selecione um item da ficha técnica
+            </label>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+              {CHECKLIST_PRESETS.map((item, index) => {
+                const Icon = getCategoryIcon(item.category);
+                // Verifica se este item está "selecionado" nos inputs
+                const isSelected = newItem.description === item.description;
+
+                return (
+                    <div
+                        key={index}
+                        onClick={() => handlePresetClick(item)}
+                        className={`
+                    flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all hover:shadow-sm
+                    ${isSelected
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500'
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300'}
+                  `}
+                    >
+                      <div className={`p-1.5 rounded-md ${isSelected ? 'bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
+                        <Icon size={18} />
+                      </div>
+                      <div className="flex-1 text-sm">
+                        <p className={`font-medium leading-tight ${isSelected ? 'text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-white'}`}>
+                          {item.category}
+                        </p>
+                        <p className={`text-xs mt-0.5 leading-tight ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                )
+              })}
             </div>
-            <button onClick={handleAddChecklistItem} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"><Plus size={18} /> Adicionar Item ao PDF</button>
+
+            {/* Inputs manuais (Preenchidos automaticamente ao clicar nos cards acima) */}
+            <div className="space-y-3 pt-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Passo 2: Confirme ou edite e Adicione
+              </label>
+              <div className="grid grid-cols-1 gap-3">
+                <input
+                    type="text"
+                    placeholder="Descrição do item..."
+                    value={newItem.description}
+                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                    className={INPUT_CLASS}
+                />
+                <input
+                    type="text"
+                    placeholder="Categoria (ex.: Segurança...)"
+                    value={newItem.category}
+                    onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                    className={INPUT_CLASS}
+                />
+              </div>
+              <button
+                  onClick={handleAddChecklistItem}
+                  disabled={!newItem.description}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-md transition-colors
+                ${newItem.description
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed'}
+              `}
+              >
+                <Plus size={18} /> Adicionar Item ao PDF
+              </button>
+            </div>
           </div>
         </div>
 
         <hr className="border-gray-200 dark:border-gray-700" />
 
+        {/* =======================
+          Observações
+      ======================== */}
         <div className="space-y-4">
-          {/* Observações - Código Original */}
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Observações</h2>
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Notas e observações adicionais</label>
