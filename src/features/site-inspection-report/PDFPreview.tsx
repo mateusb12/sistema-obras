@@ -13,11 +13,9 @@ import {
     RotateCcw
 } from 'lucide-react';
 
-// Configuração do Worker do PDF.js (Necessário para renderizar o PDF)
-// Em produção, o ideal é copiar o worker para sua pasta public, mas o CDN funciona bem para dev
+// Configuração do Worker do PDF.js
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-// Importar estilos padrão do react-pdf (necessário para seleção de texto funcionar bem)
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -26,21 +24,17 @@ interface PDFPreviewProps {
 }
 
 export function PDFPreview({ data }: PDFPreviewProps) {
-    // 1. Gera o PDF blob usando o hook do @react-pdf/renderer
-    // Adicionamos um debounce/delay manual se o form for muito pesado,
-    // mas aqui vamos direto.
+    // Inicializa o hook
     const [instance, updateInstance] = usePDF({ document: <InspectionPDFDocument data={data} /> });
 
     // Estados de controle da UI
     const [numPages, setNumPages] = useState<number>(0);
     const [pageNumber, setPageNumber] = useState<number>(1);
-    const [scale, setScale] = useState<number>(1.0); // Zoom level
+    const [scale, setScale] = useState<number>(1.0);
 
-    // Efeito para atualizar o PDF quando os dados mudam
+    // CORREÇÃO AQUI: Passamos o componente direto, sem envolver em chaves { document: ... }
     useEffect(() => {
-        updateInstance({
-            document: <InspectionPDFDocument data={data} />
-        });
+        updateInstance(<InspectionPDFDocument data={data} />);
     }, [data, updateInstance]);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
@@ -90,7 +84,7 @@ export function PDFPreview({ data }: PDFPreviewProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Paginação (se houver mais de 1 página) */}
+                    {/* Paginação */}
                     {numPages > 1 && (
                         <div className="flex items-center gap-1 mr-4 bg-gray-100 dark:bg-gray-700 rounded-md p-1">
                             <button
@@ -113,7 +107,7 @@ export function PDFPreview({ data }: PDFPreviewProps) {
                         </div>
                     )}
 
-                    {/* Botão de Download Real */}
+                    {/* Botão de Download */}
                     <a
                         href={instance.url || '#'}
                         download={`inspection-${data.header.projectName || 'report'}.pdf`}
@@ -137,11 +131,10 @@ export function PDFPreview({ data }: PDFPreviewProps) {
                     }
                     className="shadow-xl"
                 >
-                    {/* A Página "papel" em si */}
                     <Page
                         pageNumber={pageNumber}
                         scale={scale}
-                        renderTextLayer={false} // Desative se quiser performance máxima e não precisar selecionar texto
+                        renderTextLayer={false}
                         renderAnnotationLayer={false}
                         className="bg-white shadow-lg"
                     />
