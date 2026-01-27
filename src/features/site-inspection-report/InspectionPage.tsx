@@ -28,6 +28,9 @@ export function InspectionPage() {
     setValue('checklist', checklist);
   };
 
+  // Height offset accounts for header (89px) + padding (31px) = 120px
+  const PDF_PREVIEW_HEIGHT_OFFSET = '120px';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       {/* Form on the left */}
@@ -42,7 +45,7 @@ export function InspectionPage() {
       </div>
 
       {/* PDF Preview on the right */}
-      <div className="hidden lg:block sticky top-0 h-[calc(100vh-120px)]">
+      <div className={`hidden lg:block sticky top-0 h-[calc(100vh-${PDF_PREVIEW_HEIGHT_OFFSET})]`}>
         <PDFPreview data={formData} />
       </div>
     </div>
