@@ -1,0 +1,78 @@
+# -----------------------------
+#  IGNORE INFRA / TOOLS
+# -----------------------------
+node_modules/
+dist/
+build/
+.vite/
+.eslintcache
+coverage/
+.tmp/
+.temp/
+.idea/
+.vscode/
+*.log
+
+# -----------------------------
+#  AMBIENTE / SISTEMA
+# -----------------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------------
+#  DOTFILES QUE NÃO IMPORTAM
+# -----------------------------
+.env
+.env.*
+*.local
+*.dev.*
+*.test.*
+*.example
+
+# -----------------------------
+#  FRONTEND ASSETS / BUILD
+# -----------------------------
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+*.mp4
+*.mp3
+*.woff
+*.woff2
+
+# -----------------------------
+#  BIG FILES DO VITE
+# -----------------------------
+.vite/
+vite.svg
+
+# -----------------------------
+#  CONFIGS QUE SÓ POLUEM O OUTPUT
+# -----------------------------
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# -----------------------------
+#  GIT
+# -----------------------------
+.git/
+.gitignore
+
+# -----------------------------
+#  ARQUIVOS FINAIS DO REPOMIX
+# -----------------------------
+repomix-output.txt
+repomix.txt
+repomix.md
+
+# -----------------------------
+#  QUALQUER BUILD CACHE
+# -----------------------------
+*.map
+*.min.js
+*.min.css

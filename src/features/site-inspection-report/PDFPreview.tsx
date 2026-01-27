@@ -38,7 +38,9 @@ export function PDFPreview({ data }: PDFPreviewProps) {
 
     // Efeito para atualizar o PDF quando os dados mudam
     useEffect(() => {
-        updateInstance(<InspectionPDFDocument data={data} />);
+        updateInstance({
+            document: <InspectionPDFDocument data={data} />
+        });
     }, [data, updateInstance]);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
