@@ -8,7 +8,7 @@ import type {
 } from './types';
 
 /* ============================================
-   🔹 CONSTANTES
+   🔹 DADOS EXTRAÍDOS DA FICHA (FOTO)
    ============================================ */
 
 const PROJECT_OPTIONS = [
@@ -20,15 +20,18 @@ const PROJECT_OPTIONS = [
 ];
 
 const LOCATION_OPTIONS = [
-  "Apto 101",
-  "Apto 102",
-  "Apto 103B",
-  "Apto 201",
-  "Apto 202",
-  "Apto 203",
-  "Área Comum — Hall",
-  "Área Comum — Escada",
-  "Área Externa — Fachada",
+  "Apto 101", "Apto 102", "Apto 103B",
+  "Apto 201", "Apto 202", "Apto 203",
+  "Área Comum — Hall", "Área Comum — Escada", "Área Externa — Fachada"
+];
+
+// Baseado na seção "Equipe" da foto
+const PREDEFINED_MEMBERS = [
+  { name: "Rafael Bruno", role: "Pedreiro" },
+  { name: "Antonio Santos", role: "Pedreiro" },
+  { name: "Antonio Gerlyndio", role: "Pedreiro" },
+  { name: "Elieldo", role: "Servente" },
+  { name: "João Paulo", role: "Servente" },
 ];
 
 const ROLE_OPTIONS = [
@@ -41,7 +44,20 @@ const ROLE_OPTIONS = [
   "Auxiliar",
 ];
 
-// Estilo base reutilizável para Inputs e Selects
+// Baseado nos "Itens Inspecionados" da foto (1 a 7)
+const CHECKLIST_PRESETS = [
+  { category: "Alvenaria", description: "Locação e assentamento dos blocos chaves e da 1ª fiada" },
+  { category: "Alvenaria", description: "Locação das janelas e esquadrias de alumínio" },
+  { category: "Alvenaria", description: "Abertura dos vãos das portas de madeira" },
+  { category: "Alvenaria", description: "Medida das \"bonecas\"" },
+  { category: "Alvenaria", description: "Prumo (Tolerância 10mm)" },
+  { category: "Alvenaria", description: "Esquadro (Checar 3:4:5 ou metálico)" },
+  { category: "Alvenaria", description: "Telas metálicas ou barras de aço (tijolo cerâmico)" },
+  { category: "Acabamento", description: "Verificação de reboco e regularidade" }, // Exemplo extra
+  { category: "Segurança", description: "Uso correto de EPIs pela equipe" }, // Exemplo extra
+];
+
+// Estilo base reutilizável
 const INPUT_CLASS = "w-full px-3 py-2 border rounded-md text-gray-900 dark:text-white bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors";
 
 /* ============================================
@@ -67,6 +83,20 @@ export function InspectionForm({
   const [newMember, setNewMember] = useState({ name: '', role: '' });
   const [newItem, setNewItem] = useState({ category: '', description: '' });
 
+  // --- LÓGICA DE EQUIPE ---
+
+  const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedName = e.target.value;
+    // Encontra o membro na lista predefinida para auto-preencher a função
+    const foundMember = PREDEFINED_MEMBERS.find(m => m.name === selectedName);
+
+    if (foundMember) {
+      setNewMember({ name: foundMember.name, role: foundMember.role });
+    } else {
+      setNewMember({ ...newMember, name: selectedName });
+    }
+  };
+
   const handleAddTeamMember = () => {
     if (newMember.name && newMember.role) {
       onTeamChange([
@@ -77,12 +107,25 @@ export function InspectionForm({
           role: newMember.role,
         },
       ]);
-      setNewMember({ name: '', role: '' });
+      setNewMember({ name: '', role: '' }); // Reset
     }
   };
 
   const handleRemoveTeamMember = (id: string) => {
     onTeamChange(team.filter((m) => m.id !== id));
+  };
+
+  // --- LÓGICA DE CHECKLIST ---
+
+  const handleItemSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedDesc = e.target.value;
+    const foundItem = CHECKLIST_PRESETS.find(i => i.description === selectedDesc);
+
+    if (foundItem) {
+      setNewItem({ category: foundItem.category, description: foundItem.description });
+    } else {
+      setNewItem({ ...newItem, description: selectedDesc });
+    }
   };
 
   const handleAddChecklistItem = () => {
@@ -96,7 +139,7 @@ export function InspectionForm({
           status: 'na',
         },
       ]);
-      setNewItem({ category: '', description: '' });
+      setNewItem({ category: '', description: '' }); // Reset
     }
   };
 
@@ -124,10 +167,7 @@ export function InspectionForm({
           {/* Nome do Projeto (DROPDOWN) */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Nome do Projeto</label>
-            <select
-                {...register("header.projectName")}
-                className={INPUT_CLASS}
-            >
+            <select {...register("header.projectName")} className={INPUT_CLASS}>
               {PROJECT_OPTIONS.map((p) => (
                   <option key={p} value={p}>{p}</option>
               ))}
@@ -137,10 +177,7 @@ export function InspectionForm({
           {/* Localização (DROPDOWN) */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Localização</label>
-            <select
-                {...register("header.location")}
-                className={INPUT_CLASS}
-            >
+            <select {...register("header.location")} className={INPUT_CLASS}>
               {LOCATION_OPTIONS.map((loc) => (
                   <option key={loc} value={loc}>{loc}</option>
               ))}
@@ -153,7 +190,7 @@ export function InspectionForm({
             <input
                 {...register('header.date')}
                 type="date"
-                className={`${INPUT_CLASS} dark:[color-scheme:dark]`} // Corrige o ícone de calendário no Chrome dark mode
+                className={`${INPUT_CLASS} dark:[color-scheme:dark]`}
             />
           </div>
 
@@ -164,7 +201,7 @@ export function InspectionForm({
                 {...register('header.inspectorName')}
                 type="text"
                 className={INPUT_CLASS}
-                placeholder="Digite o nome do inspetor"
+                placeholder="Nome do inspetor"
             />
           </div>
         </div>
@@ -200,15 +237,20 @@ export function InspectionForm({
           {/* Adicionar Integrante */}
           <div className="space-y-3 pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                  type="text"
-                  placeholder="Nome do integrante"
-                  value={newMember.name}
-                  onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-                  className={INPUT_CLASS}
-              />
 
-              {/* Função (DROPDOWN) */}
+              {/* DROPDOWN DE NOMES (AUTO-PREENCHE A FUNÇÃO) */}
+              <select
+                  value={newMember.name}
+                  onChange={handleMemberSelect}
+                  className={INPUT_CLASS}
+              >
+                <option value="">Selecione o integrante...</option>
+                {PREDEFINED_MEMBERS.map((m) => (
+                    <option key={m.name} value={m.name}>{m.name}</option>
+                ))}
+              </select>
+
+              {/* DROPDOWN DE FUNÇÃO (Pode ser alterado manualmente se necessário) */}
               <select
                   value={newMember.role}
                   onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
@@ -226,7 +268,7 @@ export function InspectionForm({
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
             >
               <Plus size={18} />
-              Adicionar Integrante
+              Adicionar Integrante ao PDF
             </button>
           </div>
         </div>
@@ -297,22 +339,30 @@ export function InspectionForm({
             ))}
           </div>
 
-          {/* Adicionar item */}
+          {/* Adicionar item (AGORA COM DROPDOWN INTELIGENTE) */}
           <div className="space-y-3 pt-2">
             <div className="grid grid-cols-1 gap-3">
+
+              {/* Dropdown de Itens da Ficha */}
+              <select
+                  value={newItem.description}
+                  onChange={handleItemSelect}
+                  className={INPUT_CLASS}
+              >
+                <option value="">Selecione um item da ficha...</option>
+                {CHECKLIST_PRESETS.map((item, index) => (
+                    <option key={index} value={item.description}>
+                      {item.description}
+                    </option>
+                ))}
+              </select>
+
+              {/* Categoria é preenchida automaticamente, mas pode ser editada se quiser */}
               <input
                   type="text"
                   placeholder="Categoria (ex.: Segurança, Estrutura...)"
                   value={newItem.category}
                   onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                  className={INPUT_CLASS}
-              />
-
-              <input
-                  type="text"
-                  placeholder="Descrição do item"
-                  value={newItem.description}
-                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                   className={INPUT_CLASS}
               />
             </div>
@@ -322,7 +372,7 @@ export function InspectionForm({
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
             >
               <Plus size={18} />
-              Adicionar Item ao Checklist
+              Adicionar Item ao PDF
             </button>
           </div>
         </div>

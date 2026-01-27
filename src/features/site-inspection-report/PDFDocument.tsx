@@ -60,9 +60,10 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   checklistStatus: {
-    width: 40,
+    width: 45, // Aumentei levemente para caber "REPROV"
     textAlign: 'center',
     fontWeight: 'bold',
+    fontSize: 9,
   },
   statusPass: {
     color: '#16a34a',
@@ -87,79 +88,79 @@ interface PDFDocumentProps {
 
 export function InspectionPDFDocument({ data }: PDFDocumentProps) {
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Digital Inspection Report</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Project:</Text>
-            <Text style={styles.value}>{data.header.projectName || 'N/A'}</Text>
+      <Document>
+        <Page size="A4" style={styles.page}>
+          {/* Header Section */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Relatório de Inspeção Digital</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Projeto:</Text>
+              <Text style={styles.value}>{data.header.projectName || 'N/A'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Localização:</Text>
+              <Text style={styles.value}>{data.header.location || 'N/A'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Data:</Text>
+              <Text style={styles.value}>{data.header.date || 'N/A'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Inspetor:</Text>
+              <Text style={styles.value}>{data.header.inspectorName || 'N/A'}</Text>
+            </View>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Location:</Text>
-            <Text style={styles.value}>{data.header.location || 'N/A'}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Date:</Text>
-            <Text style={styles.value}>{data.header.date || 'N/A'}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Inspector:</Text>
-            <Text style={styles.value}>{data.header.inspectorName || 'N/A'}</Text>
-          </View>
-        </View>
 
-        {/* Team Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Team Members</Text>
-          {data.team.length > 0 ? (
-            data.team.map((member) => (
-              <View key={member.id} style={styles.teamMember}>
-                <Text style={styles.label}>{member.role}:</Text>
-                <Text style={styles.value}>{member.name}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={{ paddingLeft: 10, color: '#6b7280' }}>No team members added</Text>
-          )}
-        </View>
-
-        {/* Checklist Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Inspection Checklist</Text>
-          {data.checklist.length > 0 ? (
-            data.checklist.map((item) => {
-              const statusStyle =
-                item.status === 'pass'
-                  ? styles.statusPass
-                  : item.status === 'fail'
-                  ? styles.statusFail
-                  : styles.statusNA;
-              
-              return (
-                <View key={item.id} style={styles.checklistItem}>
-                  <Text style={styles.checklistCategory}>{item.category}</Text>
-                  <Text style={styles.checklistDescription}>{item.description}</Text>
-                  <Text style={[styles.checklistStatus, statusStyle]}>
-                    {item.status === 'pass' ? 'PASS' : item.status === 'fail' ? 'FAIL' : 'N/A'}
-                  </Text>
-                </View>
-              );
-            })
-          ) : (
-            <Text style={{ paddingLeft: 10, color: '#6b7280' }}>No checklist items added</Text>
-          )}
-        </View>
-
-        {/* Observations Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Observations</Text>
-          <View style={styles.observations}>
-            <Text>{data.observations || 'No observations recorded'}</Text>
+          {/* Team Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Equipe</Text>
+            {data.team.length > 0 ? (
+                data.team.map((member) => (
+                    <View key={member.id} style={styles.teamMember}>
+                      <Text style={styles.label}>{member.role}:</Text>
+                      <Text style={styles.value}>{member.name}</Text>
+                    </View>
+                ))
+            ) : (
+                <Text style={{ paddingLeft: 10, color: '#6b7280' }}>Nenhum membro adicionado</Text>
+            )}
           </View>
-        </View>
-      </Page>
-    </Document>
+
+          {/* Checklist Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Checklist de Inspeção</Text>
+            {data.checklist.length > 0 ? (
+                data.checklist.map((item) => {
+                  const statusStyle =
+                      item.status === 'pass'
+                          ? styles.statusPass
+                          : item.status === 'fail'
+                              ? styles.statusFail
+                              : styles.statusNA;
+
+                  return (
+                      <View key={item.id} style={styles.checklistItem}>
+                        <Text style={styles.checklistCategory}>{item.category}</Text>
+                        <Text style={styles.checklistDescription}>{item.description}</Text>
+                        <Text style={[styles.checklistStatus, statusStyle]}>
+                          {item.status === 'pass' ? 'APROV' : item.status === 'fail' ? 'REPROV' : 'N/A'}
+                        </Text>
+                      </View>
+                  );
+                })
+            ) : (
+                <Text style={{ paddingLeft: 10, color: '#6b7280' }}>Nenhum item adicionado</Text>
+            )}
+          </View>
+
+          {/* Observations Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Observações</Text>
+            <View style={styles.observations}>
+              <Text>{data.observations || 'Nenhuma observação registrada'}</Text>
+            </View>
+          </View>
+        </Page>
+      </Document>
   );
 }
