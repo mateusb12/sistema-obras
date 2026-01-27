@@ -21,7 +21,13 @@ export function FullLayout() {
 /* -------------------------------------------------------
    INTERNAL COMPONENT — stays inside the same file
 ------------------------------------------------------- */
-function UpperBar({ isDark, toggleDarkMode }) {
+type UpperBarProps = {
+    isDark: boolean;
+    toggleDarkMode: () => void;
+};
+
+
+function UpperBar({ isDark, toggleDarkMode }: UpperBarProps) {
   return (
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-[2000px] mx-auto px-4 py-4 flex items-center justify-between">
