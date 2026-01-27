@@ -45,9 +45,12 @@ export function InspectionPage() {
       </div>
 
       {/* PDF Preview on the right */}
-      <div className={`hidden lg:block sticky top-0 h-[calc(100vh-${PDF_PREVIEW_HEIGHT_OFFSET})]`}>
-        <PDFPreview data={formData} />
+      <div className="block mt-6 overflow-x-auto">
+        <div className="min-w-[600px] mx-auto">
+          <PDFPreview data={formData} />
+        </div>
       </div>
+
     </div>
   );
 }
