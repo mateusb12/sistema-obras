@@ -1,15 +1,16 @@
 import { useForm } from 'react-hook-form';
 import { InspectionForm } from './InspectionForm';
+import { PDFPreview } from './PDFPreview';
 import type { InspectionForm as InspectionFormType } from './types';
 
 export function InspectionPage() {
   const { register, watch, setValue } = useForm<InspectionFormType>({
     defaultValues: {
       header: {
-        projectName: '',
-        location: '',
+        projectName: 'Sample Project',
+        location: 'Sample Location',
         date: new Date().toISOString().split('T')[0],
-        inspectorName: '',
+        inspectorName: 'Inspector Name',
       },
       team: [],
       checklist: [],
@@ -28,14 +29,22 @@ export function InspectionPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <InspectionForm
-        register={register}
-        team={formData.team}
-        onTeamChange={handleTeamChange}
-        checklist={formData.checklist}
-        onChecklistChange={handleChecklistChange}
-      />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+      {/* Form on the left */}
+      <div className="overflow-y-auto pr-4">
+        <InspectionForm
+          register={register}
+          team={formData.team}
+          onTeamChange={handleTeamChange}
+          checklist={formData.checklist}
+          onChecklistChange={handleChecklistChange}
+        />
+      </div>
+
+      {/* PDF Preview on the right */}
+      <div className="hidden lg:block sticky top-0 h-[calc(100vh-120px)]">
+        <PDFPreview data={formData} />
+      </div>
     </div>
   );
 }
