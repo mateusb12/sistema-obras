@@ -7,10 +7,10 @@ export function InspectionPage() {
   const { register, watch, setValue } = useForm<InspectionFormType>({
     defaultValues: {
       header: {
-        projectName: 'Sample Project',
-        location: 'Sample Location',
+        projectName: "Flamboyant II",
+        location: "Apto 103B",
         date: new Date().toISOString().split('T')[0],
-        inspectorName: 'Inspector Name',
+        inspectorName: "Inspector Name",
       },
       team: [],
       checklist: [],
@@ -28,29 +28,27 @@ export function InspectionPage() {
     setValue('checklist', checklist);
   };
 
-  // Height offset accounts for header (89px) + padding (31px) = 120px
-  const PDF_PREVIEW_HEIGHT_OFFSET = '120px';
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-      {/* Form on the left */}
-      <div className="overflow-y-auto pr-4">
-        <InspectionForm
-          register={register}
-          team={formData.team}
-          onTeamChange={handleTeamChange}
-          checklist={formData.checklist}
-          onChecklistChange={handleChecklistChange}
-        />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
 
-      {/* PDF Preview on the right */}
-      <div className="block mt-6 overflow-x-auto">
-        <div className="min-w-[600px] mx-auto">
-          <PDFPreview data={formData} />
+        {/* Left Form */}
+        <div className="overflow-y-auto pr-4">
+          <InspectionForm
+              register={register}
+              team={formData.team}
+              onTeamChange={handleTeamChange}
+              checklist={formData.checklist}
+              onChecklistChange={handleChecklistChange}
+          />
         </div>
-      </div>
 
-    </div>
+        {/* Right PDF Preview */}
+        <div className="block mt-6 overflow-x-auto">
+          <div className="min-w-[600px] mx-auto">
+            <PDFPreview data={formData} />
+          </div>
+        </div>
+
+      </div>
   );
 }
