@@ -1,4 +1,4 @@
-import { Moon, Sun, FileText } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { InspectionPage } from '../features/site-inspection-report';
 import casasManagerLogo from '../assets/casasmanager.png';
