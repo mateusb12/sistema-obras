@@ -1,7 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import { useDarkMode } from "../hooks/useDarkMode";
-import { InspectionPage } from "../features/site-inspection-report";
 import casasManagerLogo from "../assets/casasmanager.png";
 import { useAuth } from "../auth/useAuth";
 import {
@@ -18,6 +17,7 @@ type FullLayoutProps = {
 
 const NAV_ITEMS: Array<{ label: string; route: AppRoute }> = [
   { label: "Dashboard", route: APP_ROUTES.DASHBOARD },
+  { label: "Ficha de Inspeção", route: APP_ROUTES.INSPECTION },
   { label: "Engenharia", route: APP_ROUTES.ENGINEERING },
   { label: "Admin", route: APP_ROUTES.ADMIN },
 ];
@@ -196,8 +196,6 @@ export function FullLayout({ children }: FullLayoutProps) {
           )}
 
           {children}
-
-          <InspectionPage />
         </div>
       </main>
     </div>

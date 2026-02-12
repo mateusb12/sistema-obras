@@ -6,6 +6,7 @@ import { APP_ROUTES, getCurrentRoutePath, navigateTo } from "./routes/router";
 import { ROLES } from "./auth/types";
 import { AdminPanel, EngineeringPanel } from "./pages/RolePanels";
 import { useAuth } from "./auth/useAuth";
+import { InspectionPage } from "./features/site-inspection-report";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -57,7 +58,19 @@ function App() {
     if (pathname === APP_ROUTES.DASHBOARD) {
       return (
         <PrivateRoute>
-          <FullLayout />
+          <FullLayout>
+            <h1>Hello World</h1>
+          </FullLayout>
+        </PrivateRoute>
+      );
+    }
+
+    if (pathname === APP_ROUTES.INSPECTION) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <InspectionPage />
+          </FullLayout>
         </PrivateRoute>
       );
     }

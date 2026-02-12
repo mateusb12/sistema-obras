@@ -5,6 +5,7 @@ export const APP_ROUTES = {
   DASHBOARD: "/dashboard",
   ADMIN: "/admin",
   ENGINEERING: "/engineering",
+  INSPECTION: "/inspection",
 } as const;
 
 export type AppRoute = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
