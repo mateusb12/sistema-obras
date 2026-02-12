@@ -1,7 +1,7 @@
-import type { TokenPayload } from './types';
+import type { TokenPayload } from "./types";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
-export const AUTH_TOKEN_STORAGE_KEY = 'cm.auth.token';
+export const AUTH_TOKEN_STORAGE_KEY = "cm.auth.token";
 
 function encodePayload(payload: TokenPayload): string {
   return btoa(JSON.stringify(payload));
@@ -12,7 +12,7 @@ function decodePayload(token: string): TokenPayload {
   return JSON.parse(rawPayload) as TokenPayload;
 }
 
-export function generateFakeToken(payload: Omit<TokenPayload, 'exp'>): string {
+export function generateFakeToken(payload: Omit<TokenPayload, "exp">): string {
   const tokenPayload: TokenPayload = {
     ...payload,
     exp: Date.now() + TOKEN_TTL_MS,

@@ -1,7 +1,7 @@
 export const ROLES = {
-  ADMIN: 'admin',
-  ENGINEER: 'engineer',
-  VIEWER: 'viewer',
+  ADMIN: "admin",
+  ENGINEER: "engineer",
+  VIEWER: "viewer",
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -14,7 +14,7 @@ export type MockUser = {
   role: Role;
 };
 
-export type AuthUser = Omit<MockUser, 'password'>;
+export type AuthUser = Omit<MockUser, "password">;
 
 export type TokenPayload = {
   userId: string;

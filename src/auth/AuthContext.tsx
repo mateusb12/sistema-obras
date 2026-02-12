@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
-import { MOCK_USERS } from './mockUsers';
-import type { AuthContextValue, AuthUser, Role } from './types';
-import { AuthContext } from './authContextInstance';
+import { useCallback, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { MOCK_USERS } from "./mockUsers";
+import type { AuthContextValue, AuthUser, Role } from "./types";
+import { AuthContext } from "./authContextInstance";
 import {
   clearStoredToken,
   decodeToken,
@@ -10,7 +10,7 @@ import {
   getStoredToken,
   isTokenExpired,
   saveToken,
-} from './tokenService';
+} from "./tokenService";
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -79,13 +79,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
 
     if (!matchedUser) {
-      throw new Error('Credenciais inválidas');
+      throw new Error("Credenciais inválidas");
     }
 
     const authUser = toAuthUser(matchedUser.id);
 
     if (!authUser) {
-      throw new Error('Usuário não encontrado');
+      throw new Error("Usuário não encontrado");
     }
 
     const generatedToken = generateFakeToken({

@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { FullLayout } from './components';
-import { DummyLoginPage } from './components/DummyLoginPage';
-import { PrivateRoute } from './routes/PrivateRoute';
-import { APP_ROUTES, getCurrentRoutePath, navigateTo } from './routes/router';
-import { ROLES } from './auth/types';
-import { AdminPanel, EngineeringPanel } from './pages/RolePanels';
-import { useAuth } from './auth/useAuth';
+import { useEffect, useMemo, useState } from "react";
+import { FullLayout } from "./components";
+import { DummyLoginPage } from "./components/DummyLoginPage";
+import { PrivateRoute } from "./routes/PrivateRoute";
+import { APP_ROUTES, getCurrentRoutePath, navigateTo } from "./routes/router";
+import { ROLES } from "./auth/types";
+import { AdminPanel, EngineeringPanel } from "./pages/RolePanels";
+import { useAuth } from "./auth/useAuth";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -16,15 +16,15 @@ function App() {
       setPathname(getCurrentRoutePath());
     };
 
-    window.addEventListener('popstate', onPathChange);
+    window.addEventListener("popstate", onPathChange);
 
     return () => {
-      window.removeEventListener('popstate', onPathChange);
+      window.removeEventListener("popstate", onPathChange);
     };
   }, []);
 
   useEffect(() => {
-    if (pathname === '/') {
+    if (pathname === "/") {
       navigateTo(isAuthenticated ? APP_ROUTES.DASHBOARD : APP_ROUTES.LOGIN);
     }
   }, [isAuthenticated, pathname]);
