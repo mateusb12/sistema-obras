@@ -1,86 +1,86 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { Menu, Moon, Sun, X } from "lucide-react";
-import { useDarkMode } from "../hooks/useDarkMode";
-import { InspectionPage } from "../features/site-inspection-report";
-import casasManagerLogo from "../assets/casasmanager.png";
-import { useAuth } from "../auth/useAuth";
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { Menu, Moon, Sun, X } from 'lucide-react'
+import { useDarkMode } from '../hooks/useDarkMode'
+import casasManagerLogo from '../assets/casasmanager.png'
+import { useAuth } from '../auth/useAuth'
 import {
   APP_ROUTES,
   getCurrentRoutePath,
   navigateTo,
   type AppRoute,
-} from "../routes/router";
-import { ROLES } from "../auth/types";
+} from '../routes/router'
+import { ROLES } from '../auth/types'
 
 type FullLayoutProps = {
-  children?: ReactNode;
-};
+  children?: ReactNode
+}
 
 const NAV_ITEMS: Array<{ label: string; route: AppRoute }> = [
-  { label: "Dashboard", route: APP_ROUTES.DASHBOARD },
-  { label: "Engenharia", route: APP_ROUTES.ENGINEERING },
-  { label: "Admin", route: APP_ROUTES.ADMIN },
-];
+  { label: 'Dashboard', route: APP_ROUTES.DASHBOARD },
+  { label: 'Ficha de Inspeção', route: APP_ROUTES.INSPECTION },
+  { label: 'Engenharia', route: APP_ROUTES.ENGINEERING },
+  { label: 'Admin', route: APP_ROUTES.ADMIN },
+]
 
-const SIDEBAR_MIN_WIDTH = 240;
-const SIDEBAR_MAX_WIDTH = 420;
-const SIDEBAR_DEFAULT_WIDTH = 288;
+const SIDEBAR_MIN_WIDTH = 240
+const SIDEBAR_MAX_WIDTH = 420
+const SIDEBAR_DEFAULT_WIDTH = 288
 
 export function FullLayout({ children }: FullLayoutProps) {
-  const { isDark, toggleDarkMode } = useDarkMode();
-  const { logout, user } = useAuth();
-  const [pathname, setPathname] = useState(getCurrentRoutePath());
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
+  const { isDark, toggleDarkMode } = useDarkMode()
+  const { logout, user } = useAuth()
+  const [pathname, setPathname] = useState(getCurrentRoutePath())
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH)
 
   useEffect(() => {
     const onPathChange = () => {
-      setPathname(getCurrentRoutePath());
-      setIsSidebarOpen(false);
-    };
+      setPathname(getCurrentRoutePath())
+      setIsSidebarOpen(false)
+    }
 
-    window.addEventListener("popstate", onPathChange);
+    window.addEventListener('popstate', onPathChange)
 
     return () => {
-      window.removeEventListener("popstate", onPathChange);
-    };
-  }, []);
+      window.removeEventListener('popstate', onPathChange)
+    }
+  }, [])
 
   const handleLogout = () => {
-    logout();
-    navigateTo(APP_ROUTES.LOGIN);
-  };
+    logout()
+    navigateTo(APP_ROUTES.LOGIN)
+  }
 
   const handleSidebarResizeStart = () => {
-    const previousCursor = document.body.style.cursor;
-    const previousUserSelect = document.body.style.userSelect;
+    const previousCursor = document.body.style.cursor
+    const previousUserSelect = document.body.style.userSelect
 
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
 
     const handleMouseMove = (event: MouseEvent) => {
       const nextWidth = Math.min(
         SIDEBAR_MAX_WIDTH,
         Math.max(SIDEBAR_MIN_WIDTH, event.clientX),
-      );
+      )
 
-      setSidebarWidth(nextWidth);
-    };
+      setSidebarWidth(nextWidth)
+    }
 
     const handleMouseUp = () => {
-      document.body.style.cursor = previousCursor;
-      document.body.style.userSelect = previousUserSelect;
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
+      document.body.style.cursor = previousCursor
+      document.body.style.userSelect = previousUserSelect
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-  };
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+  }
 
   const layoutStyle = {
-    "--sidebar-width": `${sidebarWidth}px`,
-  } as CSSProperties;
+    '--sidebar-width': `${sidebarWidth}px`,
+  } as CSSProperties
 
   return (
     <div
@@ -107,7 +107,7 @@ export function FullLayout({ children }: FullLayoutProps) {
 
       <aside
         className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r border-gray-200 bg-white transition-transform duration-200 dark:border-gray-700 dark:bg-gray-800 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
         style={{ width: `var(--sidebar-width)` }}
       >
@@ -131,7 +131,9 @@ export function FullLayout({ children }: FullLayoutProps) {
         </div>
 
         <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Sessão atual</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Sessão atual
+          </p>
           <p className="font-semibold text-gray-900 dark:text-white">
             {user?.name} ({user?.role})
           </p>
@@ -139,7 +141,7 @@ export function FullLayout({ children }: FullLayoutProps) {
 
         <nav className="flex-1 space-y-2 px-4 py-5">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.route;
+            const isActive = pathname === item.route
 
             return (
               <button
@@ -147,14 +149,14 @@ export function FullLayout({ children }: FullLayoutProps) {
                 type="button"
                 className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
                   isActive
-                    ? "border-blue-600 bg-blue-50 font-medium text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300"
-                    : "border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                    ? 'border-blue-600 bg-blue-50 font-medium text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300'
+                    : 'border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
                 }`}
                 onClick={() => navigateTo(item.route)}
               >
                 {item.label}
               </button>
-            );
+            )
           })}
         </nav>
 
@@ -165,8 +167,12 @@ export function FullLayout({ children }: FullLayoutProps) {
             className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
             aria-label="Toggle dark mode"
           >
-            {isDark ? <Sun size={18} className="text-yellow-400" /> : <Moon size={18} />}
-            {isDark ? "Modo claro" : "Modo escuro"}
+            {isDark ? (
+              <Sun size={18} className="text-yellow-400" />
+            ) : (
+              <Moon size={18} />
+            )}
+            {isDark ? 'Modo claro' : 'Modo escuro'}
           </button>
 
           <button
@@ -196,10 +202,8 @@ export function FullLayout({ children }: FullLayoutProps) {
           )}
 
           {children}
-
-          <InspectionPage />
         </div>
       </main>
     </div>
-  );
+  )
 }

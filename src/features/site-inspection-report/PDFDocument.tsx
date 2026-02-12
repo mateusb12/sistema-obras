@@ -5,46 +5,46 @@ import {
   View,
   StyleSheet,
   Image,
-} from "@react-pdf/renderer";
-import type { InspectionForm } from "./types";
-const logoUrl = new URL("../../assets/casasmanagerdark.png", import.meta.url)
-  .href;
+} from '@react-pdf/renderer'
+import type { InspectionForm } from './types'
+const logoUrl = new URL('../../assets/casasmanagerdark.png', import.meta.url)
+  .href
 
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 10,
-    fontFamily: "Helvetica",
-    backgroundColor: "#ffffff",
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
   },
   logo: {
     width: 180,
-    height: "auto",
+    height: 'auto',
     marginBottom: 10,
     marginLeft: -5,
   },
   logoContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 10,
   },
 
   header: {
     marginBottom: 20,
-    borderBottom: "2px solid #000",
+    borderBottom: '2px solid #000',
     paddingBottom: 10,
   },
   title: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 10,
   },
   row: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 5,
   },
   label: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
     width: 100,
   },
   value: {
@@ -56,25 +56,25 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 8,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: '#f3f4f6',
     padding: 5,
   },
   teamMember: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 4,
     paddingLeft: 10,
   },
   checklistItem: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 6,
     paddingLeft: 10,
-    alignItems: "flex-start",
+    alignItems: 'flex-start',
   },
   checklistCategory: {
     width: 120,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   checklistDescription: {
     flex: 1,
@@ -82,29 +82,29 @@ const styles = StyleSheet.create({
   },
   checklistStatus: {
     width: 45,
-    textAlign: "center",
-    fontWeight: "bold",
+    textAlign: 'center',
+    fontWeight: 'bold',
     fontSize: 9,
   },
   statusPass: {
-    color: "#16a34a",
+    color: '#16a34a',
   },
   statusFail: {
-    color: "#dc2626",
+    color: '#dc2626',
   },
   statusNA: {
-    color: "#6b7280",
+    color: '#6b7280',
   },
   observations: {
     marginTop: 10,
     padding: 10,
-    border: "1px solid #d1d5db",
+    border: '1px solid #d1d5db',
     minHeight: 100,
   },
-});
+})
 
 interface PDFDocumentProps {
-  data: InspectionForm;
+  data: InspectionForm
 }
 
 export function InspectionPDFDocument({ data }: PDFDocumentProps) {
@@ -118,20 +118,20 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
           <Text style={styles.title}>Relatório de Inspeção Digital</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Projeto:</Text>
-            <Text style={styles.value}>{data.header.projectName || "N/A"}</Text>
+            <Text style={styles.value}>{data.header.projectName || 'N/A'}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Localização:</Text>
-            <Text style={styles.value}>{data.header.location || "N/A"}</Text>
+            <Text style={styles.value}>{data.header.location || 'N/A'}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Data:</Text>
-            <Text style={styles.value}>{data.header.date || "N/A"}</Text>
+            <Text style={styles.value}>{data.header.date || 'N/A'}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Inspetor:</Text>
             <Text style={styles.value}>
-              {data.header.inspectorName || "N/A"}
+              {data.header.inspectorName || 'N/A'}
             </Text>
           </View>
         </View>
@@ -146,7 +146,7 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
               </View>
             ))
           ) : (
-            <Text style={{ paddingLeft: 10, color: "#6b7280" }}>
+            <Text style={{ paddingLeft: 10, color: '#6b7280' }}>
               Nenhum membro adicionado
             </Text>
           )}
@@ -157,11 +157,11 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
           {data.checklist.length > 0 ? (
             data.checklist.map((item) => {
               const statusStyle =
-                item.status === "pass"
+                item.status === 'pass'
                   ? styles.statusPass
-                  : item.status === "fail"
+                  : item.status === 'fail'
                     ? styles.statusFail
-                    : styles.statusNA;
+                    : styles.statusNA
 
               return (
                 <View key={item.id} style={styles.checklistItem}>
@@ -170,17 +170,17 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
                     {item.description}
                   </Text>
                   <Text style={[styles.checklistStatus, statusStyle]}>
-                    {item.status === "pass"
-                      ? "APROV"
-                      : item.status === "fail"
-                        ? "REPROV"
-                        : "N/A"}
+                    {item.status === 'pass'
+                      ? 'APROV'
+                      : item.status === 'fail'
+                        ? 'REPROV'
+                        : 'N/A'}
                   </Text>
                 </View>
-              );
+              )
             })
           ) : (
-            <Text style={{ paddingLeft: 10, color: "#6b7280" }}>
+            <Text style={{ paddingLeft: 10, color: '#6b7280' }}>
               Nenhum item adicionado
             </Text>
           )}
@@ -189,10 +189,10 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Observações</Text>
           <View style={styles.observations}>
-            <Text>{data.observations || "Nenhuma observação registrada"}</Text>
+            <Text>{data.observations || 'Nenhuma observação registrada'}</Text>
           </View>
         </View>
       </Page>
     </Document>
-  );
+  )
 }

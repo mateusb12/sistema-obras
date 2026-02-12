@@ -6,7 +6,7 @@ export function AdminPanel() {
         Área restrita para gestão avançada de usuários e parâmetros.
       </p>
     </section>
-  );
+  )
 }
 
 export function EngineeringPanel() {
@@ -17,5 +17,5 @@ export function EngineeringPanel() {
         Área de planejamento técnico e evolução dos relatórios.
       </p>
     </section>
-  );
+  )
 }

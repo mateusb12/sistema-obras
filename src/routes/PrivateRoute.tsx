@@ -1,19 +1,19 @@
-import type { ReactNode } from "react";
-import { useAuth } from "../auth/useAuth";
-import type { Role } from "../auth/types";
-import { APP_ROUTES, navigateTo } from "./router";
+import type { ReactNode } from 'react'
+import { useAuth } from '../auth/useAuth'
+import type { Role } from '../auth/types'
+import { APP_ROUTES, navigateTo } from './router'
 
 type PrivateRouteProps = {
-  children: ReactNode;
-  allowedRoles?: Role[];
-};
+  children: ReactNode
+  allowedRoles?: Role[]
+}
 
 export function PrivateRoute({ children, allowedRoles }: PrivateRouteProps) {
-  const { isAuthenticated, hasRole } = useAuth();
+  const { isAuthenticated, hasRole } = useAuth()
 
   if (!isAuthenticated) {
-    navigateTo(APP_ROUTES.LOGIN);
-    return null;
+    navigateTo(APP_ROUTES.LOGIN)
+    return null
   }
 
   if (allowedRoles && allowedRoles.length > 0 && !hasRole(allowedRoles)) {
@@ -24,8 +24,8 @@ export function PrivateRoute({ children, allowedRoles }: PrivateRouteProps) {
           Seu perfil não possui permissão para esta página.
         </p>
       </section>
-    );
+    )
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }

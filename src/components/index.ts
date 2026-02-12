@@ -1,1 +1,1 @@
-export { FullLayout } from "./FullLayout";
+export { FullLayout } from './FullLayout'

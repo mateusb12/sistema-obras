@@ -1,32 +1,32 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-import { Eye, EyeOff, Moon, Sun } from "lucide-react";
-import { useDarkMode } from "../hooks/useDarkMode";
-import casasManagerLogo from "../assets/casasmanager.png";
-import { useAuth } from "../auth/useAuth";
-import { MOCK_USERS } from "../auth/mockUsers";
-import { APP_ROUTES, navigateTo } from "../routes/router";
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+import { Eye, EyeOff, Moon, Sun } from 'lucide-react'
+import { useDarkMode } from '../hooks/useDarkMode'
+import casasManagerLogo from '../assets/casasmanager.png'
+import { useAuth } from '../auth/useAuth'
+import { MOCK_USERS } from '../auth/mockUsers'
+import { APP_ROUTES, navigateTo } from '../routes/router'
 
 export function DummyLoginPage() {
-  const { isDark, toggleDarkMode } = useDarkMode();
-  const { login } = useAuth();
+  const { isDark, toggleDarkMode } = useDarkMode()
+  const { login } = useAuth()
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+    event.preventDefault()
 
     try {
-      login(email, password);
-      setError("");
-      navigateTo(APP_ROUTES.DASHBOARD);
+      login(email, password)
+      setError('')
+      navigateTo(APP_ROUTES.DASHBOARD)
     } catch {
-      setError("Credenciais inválidas. Use uma das contas de teste abaixo.");
+      setError('Credenciais inválidas. Use uma das contas de teste abaixo.')
     }
-  };
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gray-100 p-4 transition-colors dark:bg-gray-900">
@@ -79,7 +79,7 @@ export function DummyLoginPage() {
               </label>
               <div className="relative mt-1">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
@@ -121,5 +121,5 @@ export function DummyLoginPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,37 +1,38 @@
-import { useEffect, useMemo, useState } from "react";
-import { FullLayout } from "./components";
-import { DummyLoginPage } from "./components/DummyLoginPage";
-import { PrivateRoute } from "./routes/PrivateRoute";
-import { APP_ROUTES, getCurrentRoutePath, navigateTo } from "./routes/router";
-import { ROLES } from "./auth/types";
-import { AdminPanel, EngineeringPanel } from "./pages/RolePanels";
-import { useAuth } from "./auth/useAuth";
+import { useEffect, useMemo, useState } from 'react'
+import { FullLayout } from './components'
+import { DummyLoginPage } from './components/DummyLoginPage'
+import { PrivateRoute } from './routes/PrivateRoute'
+import { APP_ROUTES, getCurrentRoutePath, navigateTo } from './routes/router'
+import { ROLES } from './auth/types'
+import { AdminPanel, EngineeringPanel } from './pages/RolePanels'
+import { useAuth } from './auth/useAuth'
+import { InspectionPage } from './features/site-inspection-report'
 
 function App() {
-  const { isAuthenticated } = useAuth();
-  const [pathname, setPathname] = useState(getCurrentRoutePath());
+  const { isAuthenticated } = useAuth()
+  const [pathname, setPathname] = useState(getCurrentRoutePath())
 
   useEffect(() => {
     const onPathChange = () => {
-      setPathname(getCurrentRoutePath());
-    };
+      setPathname(getCurrentRoutePath())
+    }
 
-    window.addEventListener("popstate", onPathChange);
+    window.addEventListener('popstate', onPathChange)
 
     return () => {
-      window.removeEventListener("popstate", onPathChange);
-    };
-  }, []);
+      window.removeEventListener('popstate', onPathChange)
+    }
+  }, [])
 
   useEffect(() => {
-    if (pathname === "/") {
-      navigateTo(isAuthenticated ? APP_ROUTES.DASHBOARD : APP_ROUTES.LOGIN);
+    if (pathname === '/') {
+      navigateTo(isAuthenticated ? APP_ROUTES.DASHBOARD : APP_ROUTES.LOGIN)
     }
-  }, [isAuthenticated, pathname]);
+  }, [isAuthenticated, pathname])
 
   const currentScreen = useMemo(() => {
     if (pathname === APP_ROUTES.LOGIN) {
-      return <DummyLoginPage />;
+      return <DummyLoginPage />
     }
 
     if (pathname === APP_ROUTES.ADMIN) {
@@ -41,7 +42,7 @@ function App() {
             <AdminPanel />
           </FullLayout>
         </PrivateRoute>
-      );
+      )
     }
 
     if (pathname === APP_ROUTES.ENGINEERING) {
@@ -51,25 +52,37 @@ function App() {
             <EngineeringPanel />
           </FullLayout>
         </PrivateRoute>
-      );
+      )
     }
 
     if (pathname === APP_ROUTES.DASHBOARD) {
       return (
         <PrivateRoute>
-          <FullLayout />
+          <FullLayout>
+            <h1>Hello World</h1>
+          </FullLayout>
         </PrivateRoute>
-      );
+      )
+    }
+
+    if (pathname === APP_ROUTES.INSPECTION) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <InspectionPage />
+          </FullLayout>
+        </PrivateRoute>
+      )
     }
 
     return (
       <section className="mx-auto mt-10 max-w-lg rounded-xl border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
         <h2 className="text-xl font-semibold">Página não encontrada</h2>
       </section>
-    );
-  }, [pathname]);
+    )
+  }, [pathname])
 
-  return currentScreen;
+  return currentScreen
 }
 
-export default App;
+export default App
