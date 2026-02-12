@@ -1,41 +1,41 @@
-const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
+const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 export const APP_ROUTES = {
-  LOGIN: "/login",
-  DASHBOARD: "/dashboard",
-  ADMIN: "/admin",
-  ENGINEERING: "/engineering",
-  INSPECTION: "/inspection",
-} as const;
+  LOGIN: '/login',
+  DASHBOARD: '/dashboard',
+  ADMIN: '/admin',
+  ENGINEERING: '/engineering',
+  INSPECTION: '/inspection',
+} as const
 
-export type AppRoute = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
+export type AppRoute = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]
 
 function withBasePath(path: string): string {
-  return `${BASE_PATH}${path}`.replace(/\/+/g, "/");
+  return `${BASE_PATH}${path}`.replace(/\/+/g, '/')
 }
 
 export function getCurrentRoutePath(): string {
-  const pathname = window.location.pathname;
+  const pathname = window.location.pathname
 
-  if (!BASE_PATH || BASE_PATH === "/") {
-    return pathname;
+  if (!BASE_PATH || BASE_PATH === '/') {
+    return pathname
   }
 
   if (pathname.startsWith(BASE_PATH)) {
-    const normalized = pathname.slice(BASE_PATH.length);
-    return normalized || "/";
+    const normalized = pathname.slice(BASE_PATH.length)
+    return normalized || '/'
   }
 
-  return pathname;
+  return pathname
 }
 
 export function navigateTo(path: AppRoute): void {
-  const fullPath = withBasePath(path);
+  const fullPath = withBasePath(path)
 
   if (window.location.pathname === fullPath) {
-    return;
+    return
   }
 
-  window.history.pushState({}, "", fullPath);
-  window.dispatchEvent(new PopStateEvent("popstate"));
+  window.history.pushState({}, '', fullPath)
+  window.dispatchEvent(new PopStateEvent('popstate'))
 }
