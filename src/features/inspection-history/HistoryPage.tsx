@@ -1,3 +1,4 @@
+import { EllipsisVertical, Eye, Pencil, Trash2, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { APP_ROUTES, navigateTo } from '../../routes/router'
 import { PDFPreview } from '../site-inspection-report'
@@ -30,26 +31,40 @@ export function HistoryPage() {
   const [onlyFails, setOnlyFails] = useState(false)
   const [selectedInspection, setSelectedInspection] =
     useState<InspectionHistoryEntry | null>(null)
+  const [openMenuInspectionId, setOpenMenuInspectionId] = useState<
+    string | null
+  >(null)
   const [inspections, setInspections] = useState<InspectionHistoryEntry[]>(
     getSavedInspections(),
   )
+  const [renameModalInspection, setRenameModalInspection] =
+    useState<InspectionHistoryEntry | null>(null)
+  const [renameTitleInput, setRenameTitleInput] = useState('')
 
   const reloadInspections = () => {
     setInspections(getSavedInspections())
   }
 
   const handleRename = (inspection: InspectionHistoryEntry) => {
-    const nextTitle = window.prompt(
-      'Novo título da inspeção',
-      inspection.data.header.title,
-    )
+    setRenameModalInspection(inspection)
+    setRenameTitleInput(inspection.data.header.title)
+  }
 
-    if (!nextTitle || !nextTitle.trim()) {
+  const handleRenameSave = () => {
+    if (!renameModalInspection) {
       return
     }
 
-    renameInspection(inspection.id, nextTitle.trim())
+    const nextTitle = renameTitleInput.trim()
+
+    if (!nextTitle) {
+      return
+    }
+
+    renameInspection(renameModalInspection.id, nextTitle)
     reloadInspections()
+    setRenameModalInspection(null)
+    setRenameTitleInput('')
   }
 
   const handleDelete = (inspection: InspectionHistoryEntry) => {
@@ -231,7 +246,11 @@ export function HistoryPage() {
           return (
             <article
               key={inspection.id}
-              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+              className={`group relative overflow-visible rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+                inspection.status === 'DRAFT'
+                  ? 'border-amber-400/80 bg-white hover:bg-amber-50/70 dark:border-amber-500/70 dark:bg-gray-800 dark:hover:bg-amber-900/25'
+                  : 'border-emerald-400/80 bg-white hover:bg-emerald-50/70 dark:border-emerald-500/70 dark:bg-gray-800 dark:hover:bg-emerald-900/25'
+              }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -260,39 +279,26 @@ export function HistoryPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {inspection.status === 'DRAFT' && (
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(inspection)}
-                      className="rounded-md bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600"
-                    >
-                      Editar
-                    </button>
-                  )}
-
+                <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setSelectedInspection(inspection)}
-                    className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    onClick={() =>
+                      setOpenMenuInspectionId((current) =>
+                        current === inspection.id ? null : inspection.id,
+                      )
+                    }
+                    className={`rounded-lg border p-2 transition ${
+                      openMenuInspectionId === inspection.id
+                        ? 'border-blue-400 bg-blue-100 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300'
+                        : 'border-white/20 bg-white/70 text-gray-700 hover:bg-white dark:border-gray-600/70 dark:bg-gray-900/70 dark:text-gray-200 dark:hover:bg-gray-800'
+                    }`}
+                    aria-label="Alternar ações da inspeção"
                   >
-                    Visualizar
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRename(inspection)}
-                    className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                  >
-                    Renomear
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(inspection)}
-                    className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30"
-                  >
-                    Deletar
+                    {openMenuInspectionId === inspection.id ? (
+                      <X className="h-4 w-4" />
+                    ) : (
+                      <EllipsisVertical className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -316,6 +322,66 @@ export function HistoryPage() {
                   </ul>
                 </div>
               )}
+
+              {openMenuInspectionId === inspection.id && (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-gray-300/70 pt-3 dark:border-gray-600/60">
+                  <span className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+                    Ações rápidas:
+                  </span>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedInspection(inspection)
+                        setOpenMenuInspectionId(null)
+                      }}
+                      className="inline-flex items-center gap-2 rounded-md border border-blue-400/70 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-500/70 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Ver Detalhes
+                    </button>
+
+                    {inspection.status === 'DRAFT' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleEdit(inspection)
+                          setOpenMenuInspectionId(null)
+                        }}
+                        className="inline-flex items-center gap-2 rounded-md border border-amber-400/70 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/70 dark:text-amber-300 dark:hover:bg-amber-900/30"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleRename(inspection)
+                        setOpenMenuInspectionId(null)
+                      }}
+                      className="inline-flex items-center gap-2 rounded-md border border-gray-300/80 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-500/70 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Renomear
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDelete(inspection)
+                        setOpenMenuInspectionId(null)
+                      }}
+                      className="inline-flex items-center gap-2 rounded-md border border-red-400/70 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-100 dark:border-red-500/70 dark:text-red-300 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              )}
             </article>
           )
         })}
@@ -333,6 +399,48 @@ export function HistoryPage() {
             </button>
             <div className="h-full overflow-hidden pt-8">
               <PDFPreview data={selectedInspection.data} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {renameModalInspection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Renomear inspeção
+            </h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Informe um novo título para esta inspeção.
+            </p>
+
+            <input
+              value={renameTitleInput}
+              onChange={(event) => setRenameTitleInput(event.target.value)}
+              className="mt-4 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              placeholder="Título da inspeção"
+              autoFocus
+            />
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRenameModalInspection(null)
+                  setRenameTitleInput('')
+                }}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleRenameSave}
+                disabled={!renameTitleInput.trim()}
+                className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Salvar
+              </button>
             </div>
           </div>
         </div>
