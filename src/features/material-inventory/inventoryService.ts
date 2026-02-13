@@ -176,6 +176,28 @@ function ensureSeedData(): void {
       category: 'Volume',
       createdAt: now,
     },
+
+    {
+      id: crypto.randomUUID(),
+      code: 'LT',
+      name: 'Litro',
+      category: 'Volume',
+      createdAt: now,
+    },
+    {
+      id: crypto.randomUUID(),
+      code: 'CX',
+      name: 'Caixa',
+      category: 'Embalagem',
+      createdAt: now,
+    },
+    {
+      id: crypto.randomUUID(),
+      code: 'M2',
+      name: 'Metro quadrado',
+      category: 'Comprimento',
+      createdAt: now,
+    },
   ]
 
   const flamboyantCimentoId = crypto.randomUUID()
@@ -188,6 +210,12 @@ function ensureSeedData(): void {
 
   const moradaVigaId = crypto.randomUUID()
   const moradaCimentoId = crypto.randomUUID()
+
+  const palmeirasPorcelanatoId = crypto.randomUUID()
+  const palmeirasTintaId = crypto.randomUUID()
+
+  const internaCaboId = crypto.randomUUID()
+  const internaTuboId = crypto.randomUUID()
 
   const materials: Material[] = [
     {
@@ -223,13 +251,14 @@ function ensureSeedData(): void {
       createdAt: now,
       updatedAt: now,
     },
+
     {
       id: europaTijoloId,
       name: 'Tijolo baiano 8 furos',
       projectId: 'Residencial Jardim Europa',
       unitCode: 'UN',
       unitLabel: 'UN',
-      quantity: 240,
+      quantity: 1500,
       minQuantityAlert: 500,
       createdAt: now,
       updatedAt: now,
@@ -240,7 +269,7 @@ function ensureSeedData(): void {
       projectId: 'Residencial Jardim Europa',
       unitCode: 'SC',
       unitLabel: 'SC',
-      quantity: 18,
+      quantity: 95,
       minQuantityAlert: 30,
       createdAt: now,
       updatedAt: now,
@@ -251,11 +280,12 @@ function ensureSeedData(): void {
       projectId: 'Residencial Jardim Europa',
       unitCode: 'M3',
       unitLabel: 'M3',
-      quantity: 4,
+      quantity: 25,
       minQuantityAlert: 8,
       createdAt: now,
       updatedAt: now,
     },
+
     {
       id: moradaVigaId,
       name: 'Viga pré-moldada 3m',
@@ -275,6 +305,52 @@ function ensureSeedData(): void {
       unitLabel: 'SC',
       quantity: 14,
       minQuantityAlert: 25,
+      createdAt: now,
+      updatedAt: now,
+    },
+
+    {
+      id: palmeirasPorcelanatoId,
+      name: 'Porcelanato Polido 60x60',
+      projectId: 'Condomínio Alto das Palmeiras',
+      unitCode: 'M2',
+      unitLabel: 'M2',
+      quantity: 45,
+      minQuantityAlert: 30,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: palmeirasTintaId,
+      name: 'Tinta Acrílica Branca 18L',
+      projectId: 'Condomínio Alto das Palmeiras',
+      unitCode: 'LT',
+      unitLabel: 'LT',
+      quantity: 5,
+      minQuantityAlert: 10,
+      createdAt: now,
+      updatedAt: now,
+    },
+
+    {
+      id: internaCaboId,
+      name: 'Cabo Flexível 2.5mm',
+      projectId: 'Obra Interna — Reformas',
+      unitCode: 'UN',
+      unitLabel: 'UN',
+      quantity: 2,
+      minQuantityAlert: 5,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: internaTuboId,
+      name: 'Tubo de Esgoto PVC 100mm',
+      projectId: 'Obra Interna — Reformas',
+      unitCode: 'UN',
+      unitLabel: 'UN',
+      quantity: 15,
+      minQuantityAlert: 20,
       createdAt: now,
       updatedAt: now,
     },
@@ -317,6 +393,31 @@ function ensureSeedData(): void {
       date: today,
       projectId: 'Residencial Morada das Flores',
       teamName: 'Equipe Estrutural Morada',
+      createdAt: now,
+    },
+
+    {
+      id: crypto.randomUUID(),
+      materialId: palmeirasPorcelanatoId,
+      materialName: 'Porcelanato Polido 60x60',
+      quantityUsed: 15,
+      unitCode: 'M2',
+      unitLabel: 'M2',
+      date: today,
+      projectId: 'Condomínio Alto das Palmeiras',
+      teamName: 'Equipe de Acabamento',
+      createdAt: now,
+    },
+    {
+      id: crypto.randomUUID(),
+      materialId: internaTuboId,
+      materialName: 'Tubo de Esgoto PVC 100mm',
+      quantityUsed: 4,
+      unitCode: 'UN',
+      unitLabel: 'UN',
+      date: today,
+      projectId: 'Obra Interna — Reformas',
+      teamName: 'Encanador Marcos',
       createdAt: now,
     },
   ]
