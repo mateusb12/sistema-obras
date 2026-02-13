@@ -30,6 +30,14 @@ const NAV_MODULES: Array<{ label: string; items: NavItem[] }> = [
     ],
   },
   {
+    label: 'Estoque',
+    items: [
+      { label: 'Dashboard', route: APP_ROUTES.INVENTORY_DASHBOARD },
+      { label: 'Materiais', route: APP_ROUTES.INVENTORY_REGISTRY },
+      { label: 'Consumo', route: APP_ROUTES.INVENTORY_LOGS },
+    ],
+  },
+  {
     label: 'Operações',
     items: [
       { label: 'Engenharia', route: APP_ROUTES.ENGINEERING },
@@ -42,22 +50,41 @@ const SIDEBAR_MIN_WIDTH = 240
 const SIDEBAR_MAX_WIDTH = 420
 const SIDEBAR_DEFAULT_WIDTH = 288
 
+function getExpandedModulesState(pathname: string): Record<string, boolean> {
+  const activeModule = NAV_MODULES.find((module) =>
+    module.items.some((item) => item.route === pathname),
+  )
+
+  return Object.fromEntries(
+    NAV_MODULES.map((module) => [
+      module.label,
+      module.label === 'Inspeção' || module.label === activeModule?.label,
+    ]),
+  )
+}
+
 export function FullLayout({ children }: FullLayoutProps) {
   const { isDark, toggleDarkMode } = useDarkMode()
   const { logout, user } = useAuth()
   const [pathname, setPathname] = useState(getCurrentRoutePath())
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH)
-  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(
-    () =>
-      Object.fromEntries(
-        NAV_MODULES.map((module) => [module.label, module.label === 'Inspeção']),
-      ),
+  const [expandedModules, setExpandedModules] = useState<
+    Record<string, boolean>
+  >(() =>
+    Object.fromEntries(
+      NAV_MODULES.map((module) => [module.label, module.label === 'Inspeção']),
+    ),
   )
 
   useEffect(() => {
     const onPathChange = () => {
-      setPathname(getCurrentRoutePath())
+      const currentPath = getCurrentRoutePath()
+      setPathname(currentPath)
+      setExpandedModules((previous) => ({
+        ...previous,
+        ...getExpandedModulesState(currentPath),
+      }))
       setIsSidebarOpen(false)
     }
 
@@ -67,22 +94,6 @@ export function FullLayout({ children }: FullLayoutProps) {
       window.removeEventListener('hashchange', onPathChange)
     }
   }, [])
-
-
-  useEffect(() => {
-    const activeModule = NAV_MODULES.find((module) =>
-      module.items.some((item) => item.route === pathname),
-    )
-
-    if (!activeModule) {
-      return
-    }
-
-    setExpandedModules((previous) => ({
-      ...previous,
-      [activeModule.label]: true,
-    }))
-  }, [pathname])
 
   const handleLogout = () => {
     logout()
@@ -197,7 +208,11 @@ export function FullLayout({ children }: FullLayoutProps) {
                   }
                 >
                   {module.label}
-                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  {isExpanded ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  )}
                 </button>
 
                 {isExpanded && (
