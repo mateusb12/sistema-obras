@@ -8,7 +8,12 @@ export interface ChecklistItem {
   id: string
   category: string
   description: string
+  acceptanceCriteria: string
+  sampling: string
+  inspectionMethod: string
   status: 'pass' | 'fail' | 'na'
+  failReason: string
+  failResolution: 'non_conform' | 'needs_correction' | null
 }
 
 export interface ProjectHeader {

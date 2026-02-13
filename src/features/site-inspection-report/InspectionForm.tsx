@@ -104,7 +104,13 @@ export function InspectionForm({
 }: InspectionFormProps) {
   const [newMember, setNewMember] = useState({ name: '', role: '' })
 
-  const [newItem, setNewItem] = useState({ category: '', description: '' })
+  const [newItem, setNewItem] = useState({
+    category: '',
+    description: '',
+    acceptanceCriteria: '',
+    sampling: '100%',
+    inspectionMethod: '',
+  })
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedName = e.target.value
@@ -138,16 +144,64 @@ export function InspectionForm({
           id: crypto.randomUUID(),
           category: newItem.category,
           description: newItem.description,
+          acceptanceCriteria: newItem.acceptanceCriteria || 'Não informado',
+          sampling: newItem.sampling || 'Não informado',
+          inspectionMethod: newItem.inspectionMethod || 'Não informado',
           status: 'na',
+          failReason: '',
+          failResolution: null,
         },
       ])
-      setNewItem({ category: '', description: '' })
+      setNewItem({
+        category: '',
+        description: '',
+        acceptanceCriteria: '',
+        sampling: '100%',
+        inspectionMethod: '',
+      })
     }
   }
 
   const handleStatusChange = (id: string, status: 'pass' | 'fail' | 'na') => {
     onChecklistChange(
-      checklist.map((item) => (item.id === id ? { ...item, status } : item)),
+      checklist.map((item) => {
+        if (item.id !== id) {
+          return item
+        }
+
+        if (status === 'fail') {
+          return {
+            ...item,
+            status,
+            failReason: item.failReason,
+            failResolution: item.failResolution,
+          }
+        }
+
+        return {
+          ...item,
+          status,
+          failReason: '',
+          failResolution: null,
+        }
+      }),
+    )
+  }
+
+  const handleFailReasonChange = (id: string, failReason: string) => {
+    onChecklistChange(
+      checklist.map((item) => (item.id === id ? { ...item, failReason } : item)),
+    )
+  }
+
+  const handleFailResolutionChange = (
+    id: string,
+    failResolution: 'non_conform' | 'needs_correction',
+  ) => {
+    onChecklistChange(
+      checklist.map((item) =>
+        item.id === id ? { ...item, failResolution } : item,
+      ),
     )
   }
 
@@ -361,6 +415,20 @@ export function InspectionForm({
                   <p className="text-base font-medium text-gray-900 dark:text-gray-100">
                     {item.description}
                   </p>
+                  <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-gray-600 dark:text-gray-300">
+                    <p>
+                      <span className="font-semibold">Critério:</span>{' '}
+                      {item.acceptanceCriteria}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Amostragem:</span>{' '}
+                      {item.sampling}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Meio:</span>{' '}
+                      {item.inspectionMethod}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
@@ -395,6 +463,60 @@ export function InspectionForm({
                   </button>
                 </div>
               </div>
+
+              {item.status === 'fail' && (
+                <div className="mt-4 space-y-3 border-t border-red-200/60 dark:border-red-800/60 pt-3">
+                  <label className="block text-sm font-medium text-red-800 dark:text-red-300">
+                    Motivo da não conformidade
+                  </label>
+                  <textarea
+                    value={item.failReason}
+                    onChange={(e) =>
+                      handleFailReasonChange(item.id, e.target.value)
+                    }
+                    rows={3}
+                    className={INPUT_CLASS}
+                    placeholder="Descreva o motivo da reprovação..."
+                  />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={() =>
+                        handleFailResolutionChange(item.id, 'non_conform')
+                      }
+                      disabled={!item.failReason.trim()}
+                      className={`
+                        px-3 py-2 rounded-md font-medium transition-all text-sm
+                        ${
+                          item.failResolution === 'non_conform'
+                            ? 'bg-amber-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-amber-100 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-amber-900/30'
+                        }
+                        disabled:opacity-40 disabled:cursor-not-allowed
+                      `}
+                    >
+                      Aceitar como está
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleFailResolutionChange(item.id, 'needs_correction')
+                      }
+                      disabled={!item.failReason.trim()}
+                      className={`
+                        px-3 py-2 rounded-md font-medium transition-all text-sm
+                        ${
+                          item.failResolution === 'needs_correction'
+                            ? 'bg-red-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-red-100 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-red-900/30'
+                        }
+                        disabled:opacity-40 disabled:cursor-not-allowed
+                      `}
+                    >
+                      Solicitar Correção
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -405,34 +527,78 @@ export function InspectionForm({
               <Plus size={16} className="mr-1" /> Adicionar item extra (não
               listado)
             </summary>
-            <div className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-3 items-end bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md border border-gray-100 dark:border-gray-700">
-              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">
-                  Categoria
-                </label>
-                <input
-                  type="text"
-                  value={newItem.category}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, category: e.target.value })
-                  }
-                  className={INPUT_CLASS}
-                  placeholder="Ex: Elétrica"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">
-                  Descrição
-                </label>
-                <input
-                  type="text"
-                  value={newItem.description}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, description: e.target.value })
-                  }
-                  className={INPUT_CLASS}
-                  placeholder="Descrição do item extra..."
-                />
+            <div className="mt-3 space-y-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md border border-gray-100 dark:border-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">
+                    Categoria
+                  </label>
+                  <input
+                    type="text"
+                    value={newItem.category}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, category: e.target.value })
+                    }
+                    className={INPUT_CLASS}
+                    placeholder="Ex: Elétrica"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">
+                    Descrição
+                  </label>
+                  <input
+                    type="text"
+                    value={newItem.description}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, description: e.target.value })
+                    }
+                    className={INPUT_CLASS}
+                    placeholder="Descrição do item extra..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">
+                    Critério de aceitação
+                  </label>
+                  <input
+                    type="text"
+                    value={newItem.acceptanceCriteria}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, acceptanceCriteria: e.target.value })
+                    }
+                    className={INPUT_CLASS}
+                    placeholder="Critério esperado"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">
+                    Amostragem
+                  </label>
+                  <input
+                    type="text"
+                    value={newItem.sampling}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, sampling: e.target.value })
+                    }
+                    className={INPUT_CLASS}
+                    placeholder="Ex: 100%"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">
+                    Meio de inspeção
+                  </label>
+                  <input
+                    type="text"
+                    value={newItem.inspectionMethod}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, inspectionMethod: e.target.value })
+                    }
+                    className={INPUT_CLASS}
+                    placeholder="Ex: Trena metálica"
+                  />
+                </div>
               </div>
               <button
                 onClick={handleAddManualItem}
