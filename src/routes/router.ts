@@ -5,6 +5,9 @@ export const APP_ROUTES = {
   ENGINEERING: '/engineering',
   INSPECTION: '/inspection',
   HISTORY: '/history',
+  INVENTORY_DASHBOARD: '/inventory/dashboard',
+  INVENTORY_REGISTRY: '/inventory/materials',
+  INVENTORY_LOGS: '/inventory/logs',
 } as const
 
 export type AppRoute = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]

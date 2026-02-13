@@ -8,6 +8,11 @@ import { AdminPanel, EngineeringPanel } from './pages/RolePanels'
 import { useAuth } from './auth/useAuth'
 import { InspectionPage } from './features/site-inspection-report'
 import { HistoryPage } from './features/inspection-history'
+import {
+  ConsumptionLogPage,
+  InventoryDashboard,
+  MaterialRegistry,
+} from './features/material-inventory'
 
 function App() {
   const { isAuthenticated } = useAuth()
@@ -81,6 +86,36 @@ function App() {
         <PrivateRoute>
           <FullLayout>
             <HistoryPage />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    if (pathname === APP_ROUTES.INVENTORY_DASHBOARD) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <InventoryDashboard />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    if (pathname === APP_ROUTES.INVENTORY_REGISTRY) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <MaterialRegistry />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    if (pathname === APP_ROUTES.INVENTORY_LOGS) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <ConsumptionLogPage />
           </FullLayout>
         </PrivateRoute>
       )
