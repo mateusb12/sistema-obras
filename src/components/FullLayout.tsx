@@ -39,10 +39,10 @@ export function FullLayout({ children }: FullLayoutProps) {
       setIsSidebarOpen(false)
     }
 
-    window.addEventListener('popstate', onPathChange)
+    window.addEventListener('hashchange', onPathChange)
 
     return () => {
-      window.removeEventListener('popstate', onPathChange)
+      window.removeEventListener('hashchange', onPathChange)
     }
   }, [])
 
