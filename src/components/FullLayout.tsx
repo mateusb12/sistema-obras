@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { Menu, Moon, Sun, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Menu, Moon, Sun, X } from 'lucide-react'
 import { useDarkMode } from '../hooks/useDarkMode'
 import casasManagerLogo from '../assets/casasmanager.png'
 import { useAuth } from '../auth/useAuth'
@@ -15,12 +15,27 @@ type FullLayoutProps = {
   children?: ReactNode
 }
 
-const NAV_ITEMS: Array<{ label: string; route: AppRoute }> = [
-  { label: 'Dashboard', route: APP_ROUTES.DASHBOARD },
-  { label: 'Ficha de Inspeção', route: APP_ROUTES.INSPECTION },
-  { label: 'Histórico', route: APP_ROUTES.HISTORY },
-  { label: 'Engenharia', route: APP_ROUTES.ENGINEERING },
-  { label: 'Admin', route: APP_ROUTES.ADMIN },
+type NavItem = { label: string; route: AppRoute }
+
+const NAV_MODULES: Array<{ label: string; items: NavItem[] }> = [
+  {
+    label: 'Geral',
+    items: [{ label: 'Dashboard', route: APP_ROUTES.DASHBOARD }],
+  },
+  {
+    label: 'Inspeção',
+    items: [
+      { label: 'Ficha de Inspeção', route: APP_ROUTES.INSPECTION },
+      { label: 'Histórico', route: APP_ROUTES.HISTORY },
+    ],
+  },
+  {
+    label: 'Operações',
+    items: [
+      { label: 'Engenharia', route: APP_ROUTES.ENGINEERING },
+      { label: 'Admin', route: APP_ROUTES.ADMIN },
+    ],
+  },
 ]
 
 const SIDEBAR_MIN_WIDTH = 240
@@ -33,6 +48,12 @@ export function FullLayout({ children }: FullLayoutProps) {
   const [pathname, setPathname] = useState(getCurrentRoutePath())
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH)
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(
+    () =>
+      Object.fromEntries(
+        NAV_MODULES.map((module) => [module.label, module.label === 'Inspeção']),
+      ),
+  )
 
   useEffect(() => {
     const onPathChange = () => {
@@ -46,6 +67,22 @@ export function FullLayout({ children }: FullLayoutProps) {
       window.removeEventListener('hashchange', onPathChange)
     }
   }, [])
+
+
+  useEffect(() => {
+    const activeModule = NAV_MODULES.find((module) =>
+      module.items.some((item) => item.route === pathname),
+    )
+
+    if (!activeModule) {
+      return
+    }
+
+    setExpandedModules((previous) => ({
+      ...previous,
+      [activeModule.label]: true,
+    }))
+  }, [pathname])
 
   const handleLogout = () => {
     logout()
@@ -140,23 +177,52 @@ export function FullLayout({ children }: FullLayoutProps) {
           </p>
         </div>
 
-        <nav className="flex-1 space-y-2 px-4 py-5">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.route
+        <nav className="flex-1 space-y-3 px-4 py-5">
+          {NAV_MODULES.map((module) => {
+            const isExpanded = expandedModules[module.label]
 
             return (
-              <button
-                key={item.route}
-                type="button"
-                className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
-                  isActive
-                    ? 'border-blue-600 bg-blue-50 font-medium text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300'
-                    : 'border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
-                }`}
-                onClick={() => navigateTo(item.route)}
+              <div
+                key={module.label}
+                className="rounded-lg border border-gray-200 p-2 dark:border-gray-700"
               >
-                {item.label}
-              </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                  onClick={() =>
+                    setExpandedModules((previous) => ({
+                      ...previous,
+                      [module.label]: !previous[module.label],
+                    }))
+                  }
+                >
+                  {module.label}
+                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-2 space-y-2">
+                    {module.items.map((item) => {
+                      const isActive = pathname === item.route
+
+                      return (
+                        <button
+                          key={item.route}
+                          type="button"
+                          className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
+                            isActive
+                              ? 'border-blue-600 bg-blue-50 font-medium text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300'
+                              : 'border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+                          }`}
+                          onClick={() => navigateTo(item.route)}
+                        >
+                          {item.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             )
           })}
         </nav>
