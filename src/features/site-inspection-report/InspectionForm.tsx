@@ -50,17 +50,36 @@ const PROJECT_CARDS = [
   },
 ]
 
-const LOCATION_OPTIONS = [
-  'Apto 101',
-  'Apto 102',
-  'Apto 103B',
-  'Apto 201',
-  'Apto 202',
-  'Apto 203',
-  'Área Comum — Hall',
-  'Área Comum — Escada',
-  'Área Externa — Fachada',
-]
+const LOCATION_OPTIONS = {
+  ladoA: [
+    '101A',
+    '102A',
+    '103A',
+    '104A',
+    '105A',
+    '106A',
+    '107A',
+    '108A',
+    '109A',
+    '110A',
+    '111A',
+    '112A',
+    '201A',
+    '202A',
+    '203A',
+    '204A',
+    '205A',
+    '206A',
+    '207A',
+    '208A',
+    '209A',
+    '210A',
+    '211A',
+    '212A',
+  ],
+  ladoB: ['110B', '210B'],
+  areasComuns: ['Hall', 'Escada', 'Fachada'],
+}
 
 const PREDEFINED_MEMBERS = [
   { name: 'Rafael Bruno', role: 'Pedreiro' },
@@ -190,7 +209,9 @@ export function InspectionForm({
 
   const handleFailReasonChange = (id: string, failReason: string) => {
     onChecklistChange(
-      checklist.map((item) => (item.id === id ? { ...item, failReason } : item)),
+      checklist.map((item) =>
+        item.id === id ? { ...item, failReason } : item,
+      ),
     )
   }
 
@@ -270,11 +291,31 @@ export function InspectionForm({
             Localização / Unidade
           </label>
           <select {...register('header.location')} className={INPUT_CLASS}>
-            {LOCATION_OPTIONS.map((loc) => (
-              <option key={loc} value={loc}>
-                {loc}
-              </option>
-            ))}
+            <option value="">Selecione a unidade...</option>
+
+            <optgroup label="Lado A">
+              {LOCATION_OPTIONS.ladoA.map((unit) => (
+                <option key={unit} value={unit}>
+                  Apto {unit}
+                </option>
+              ))}
+            </optgroup>
+
+            <optgroup label="Lado B">
+              {LOCATION_OPTIONS.ladoB.map((unit) => (
+                <option key={unit} value={unit}>
+                  Apto {unit}
+                </option>
+              ))}
+            </optgroup>
+
+            <optgroup label="Áreas Comuns">
+              {LOCATION_OPTIONS.areasComuns.map((area) => (
+                <option key={area} value={area}>
+                  Área Comum — {area}
+                </option>
+              ))}
+            </optgroup>
           </select>
         </div>
 
@@ -565,7 +606,10 @@ export function InspectionForm({
                     type="text"
                     value={newItem.acceptanceCriteria}
                     onChange={(e) =>
-                      setNewItem({ ...newItem, acceptanceCriteria: e.target.value })
+                      setNewItem({
+                        ...newItem,
+                        acceptanceCriteria: e.target.value,
+                      })
                     }
                     className={INPUT_CLASS}
                     placeholder="Critério esperado"
@@ -593,7 +637,10 @@ export function InspectionForm({
                     type="text"
                     value={newItem.inspectionMethod}
                     onChange={(e) =>
-                      setNewItem({ ...newItem, inspectionMethod: e.target.value })
+                      setNewItem({
+                        ...newItem,
+                        inspectionMethod: e.target.value,
+                      })
                     }
                     className={INPUT_CLASS}
                     placeholder="Ex: Trena metálica"
