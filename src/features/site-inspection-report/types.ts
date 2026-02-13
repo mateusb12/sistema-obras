@@ -17,6 +17,7 @@ export interface ChecklistItem {
 }
 
 export interface ProjectHeader {
+  title: string
   projectName: string
   location: string
   date: string

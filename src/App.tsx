@@ -7,6 +7,7 @@ import { ROLES } from './auth/types'
 import { AdminPanel, EngineeringPanel } from './pages/RolePanels'
 import { useAuth } from './auth/useAuth'
 import { InspectionPage } from './features/site-inspection-report'
+import { HistoryPage } from './features/inspection-history'
 
 function App() {
   const { isAuthenticated } = useAuth()
@@ -70,6 +71,16 @@ function App() {
         <PrivateRoute>
           <FullLayout>
             <InspectionPage />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    if (pathname === APP_ROUTES.HISTORY) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <HistoryPage />
           </FullLayout>
         </PrivateRoute>
       )

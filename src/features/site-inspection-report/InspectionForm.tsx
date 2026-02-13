@@ -4,9 +4,6 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  Building2,
-  Home,
-  Hammer,
   ShieldCheck,
   Briefcase,
 } from 'lucide-react'
@@ -16,70 +13,7 @@ import type {
   TeamMember,
   ChecklistItem,
 } from './types'
-
-const PROJECT_CARDS = [
-  {
-    id: 'Flamboyant II',
-    title: 'Flamboyant II',
-    description: 'Torre Residencial - Fase de Acabamento',
-    icon: Building2,
-  },
-  {
-    id: 'Residencial Jardim Europa',
-    title: 'Res. Jardim Europa',
-    description: 'Condomínio Horizontal - Estrutura',
-    icon: Home,
-  },
-  {
-    id: 'Residencial Morada das Flores',
-    title: 'Morada das Flores',
-    description: 'Blocos 1 e 2 - Alvenaria',
-    icon: Home,
-  },
-  {
-    id: 'Condomínio Alto das Palmeiras',
-    title: 'Alto das Palmeiras',
-    description: 'Área de Lazer e Portaria',
-    icon: Building2,
-  },
-  {
-    id: 'Obra Interna — Reformas',
-    title: 'Obra Interna',
-    description: 'Reformas e Manutenção Geral',
-    icon: Hammer,
-  },
-]
-
-const LOCATION_OPTIONS = {
-  ladoA: [
-    '101A',
-    '102A',
-    '103A',
-    '104A',
-    '105A',
-    '106A',
-    '107A',
-    '108A',
-    '109A',
-    '110A',
-    '111A',
-    '112A',
-    '201A',
-    '202A',
-    '203A',
-    '204A',
-    '205A',
-    '206A',
-    '207A',
-    '208A',
-    '209A',
-    '210A',
-    '211A',
-    '212A',
-  ],
-  ladoB: ['110B', '210B'],
-  areasComuns: ['Hall', 'Escada', 'Fachada'],
-}
+import { LOCATION_OPTIONS, PROJECT_CARDS } from './constants'
 
 const PREDEFINED_MEMBERS = [
   { name: 'Rafael Bruno', role: 'Pedreiro' },
@@ -110,6 +44,9 @@ interface InspectionFormProps {
   onChecklistChange: (checklist: ChecklistItem[]) => void
   selectedProject: string
   onProjectChange: (projectName: string) => void
+  onSaveDraft: () => void
+  onFinish: () => void
+  isEditing: boolean
 }
 
 export function InspectionForm({
@@ -120,6 +57,9 @@ export function InspectionForm({
   onChecklistChange,
   selectedProject,
   onProjectChange,
+  onSaveDraft,
+  onFinish,
+  isEditing,
 }: InspectionFormProps) {
   const [newMember, setNewMember] = useState({ name: '', role: '' })
 
@@ -675,6 +615,39 @@ export function InspectionForm({
             placeholder="Digite quaisquer observações relevantes sobre a inspeção..."
           />
         </div>
+      </div>
+
+      <section className="rounded-lg border-2 border-blue-300 bg-blue-50/70 p-4 dark:border-blue-700 dark:bg-blue-900/20">
+        <h3 className="text-lg font-bold text-blue-800 dark:text-blue-300">
+          Título da Inspeção (obrigatório para identificação no histórico)
+        </h3>
+        <p className="mb-3 text-sm text-blue-700 dark:text-blue-300">
+          Esse título será exibido no histórico e usado para busca/renomeação.
+        </p>
+        <input
+          {...register('header.title')}
+          type="text"
+          className="w-full rounded-md border-2 border-blue-400 bg-white px-3 py-3 text-lg font-semibold text-gray-900 outline-none transition focus:border-blue-600 dark:border-blue-600 dark:bg-gray-900 dark:text-white"
+          placeholder="Ex: Inspeção 104-B"
+        />
+      </section>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <button
+          type="button"
+          onClick={onSaveDraft}
+          className="w-full rounded-md border border-blue-500 bg-white px-4 py-3 text-base font-semibold text-blue-700 transition-colors hover:bg-blue-50 dark:bg-gray-900 dark:text-blue-300"
+        >
+          {isEditing ? 'Atualizar Rascunho' : 'Salvar como Rascunho'}
+        </button>
+
+        <button
+          type="button"
+          onClick={onFinish}
+          className="w-full rounded-md bg-blue-600 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-blue-700"
+        >
+          Finalizar Inspeção
+        </button>
       </div>
     </div>
   )

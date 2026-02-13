@@ -144,6 +144,10 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
           </View>
           <Text style={styles.title}>Relatório de Inspeção Digital</Text>
           <View style={styles.row}>
+            <Text style={styles.label}>Título:</Text>
+            <Text style={styles.value}>{data.header.title || 'N/A'}</Text>
+          </View>
+          <View style={styles.row}>
             <Text style={styles.label}>Projeto:</Text>
             <Text style={styles.value}>{data.header.projectName || 'N/A'}</Text>
           </View>
@@ -225,7 +229,9 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
 
                 return (
                   <View key={item.id} style={styles.checklistRow}>
-                    <Text style={styles.checklistCategory}>{item.category}</Text>
+                    <Text style={styles.checklistCategory}>
+                      {item.category}
+                    </Text>
                     <Text style={styles.checklistDescription}>
                       {item.description}
                     </Text>
@@ -240,7 +246,9 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
                           : 'N/A'}
                     </Text>
                     <Text style={styles.checklistDetail}>{detailText}</Text>
-                    <Text style={styles.checklistResolution}>{resolutionText}</Text>
+                    <Text style={styles.checklistResolution}>
+                      {resolutionText}
+                    </Text>
                   </View>
                 )
               })}
