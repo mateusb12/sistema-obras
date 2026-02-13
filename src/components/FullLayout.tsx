@@ -38,6 +38,13 @@ const NAV_MODULES: Array<{ label: string; items: NavItem[] }> = [
     ],
   },
   {
+    label: 'Pessoas & Compliance',
+    items: [
+      { label: 'Dashboard', route: APP_ROUTES.PERSONNEL_DASHBOARD },
+      { label: 'Funcionários', route: APP_ROUTES.PERSONNEL_LIST },
+    ],
+  },
+  {
     label: 'Operações',
     items: [
       { label: 'Engenharia', route: APP_ROUTES.ENGINEERING },

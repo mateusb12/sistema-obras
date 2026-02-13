@@ -13,6 +13,10 @@ import {
   InventoryDashboard,
   MaterialRegistry,
 } from './features/material-inventory'
+import {
+  ComplianceDashboard,
+  EmployeeList,
+} from './features/personnel-compliance'
 
 function App() {
   const { isAuthenticated } = useAuth()
@@ -116,6 +120,26 @@ function App() {
         <PrivateRoute>
           <FullLayout>
             <ConsumptionLogPage />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    if (pathname === APP_ROUTES.PERSONNEL_DASHBOARD) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <ComplianceDashboard />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    if (pathname === APP_ROUTES.PERSONNEL_LIST) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <EmployeeList />
           </FullLayout>
         </PrivateRoute>
       )
