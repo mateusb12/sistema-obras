@@ -7,13 +7,14 @@ import {
   Image,
 } from '@react-pdf/renderer'
 import type { InspectionForm } from './types'
+
 const logoUrl = new URL('../../assets/casasmanagerdark.png', import.meta.url)
   .href
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontSize: 10,
+    padding: 30,
+    fontSize: 9,
     fontFamily: 'Helvetica',
     backgroundColor: '#ffffff',
   },
@@ -28,20 +29,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
   },
-
   header: {
-    marginBottom: 20,
+    marginBottom: 16,
     borderBottom: '2px solid #000',
     paddingBottom: 10,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   label: {
     fontWeight: 'bold',
@@ -51,11 +51,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   section: {
-    marginTop: 15,
-    marginBottom: 10,
+    marginTop: 12,
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 8,
     backgroundColor: '#f3f4f6',
@@ -64,27 +64,54 @@ const styles = StyleSheet.create({
   teamMember: {
     flexDirection: 'row',
     marginBottom: 4,
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
-  checklistItem: {
+  checklistRow: {
     flexDirection: 'row',
-    marginBottom: 6,
-    paddingLeft: 10,
+    marginBottom: 4,
     alignItems: 'flex-start',
+    borderBottom: '1px solid #e5e7eb',
+    paddingBottom: 3,
+  },
+  checklistHeaderRow: {
+    backgroundColor: '#f3f4f6',
+    borderBottom: '1px solid #d1d5db',
+    paddingTop: 3,
+    paddingBottom: 3,
+  },
+  headerCell: {
+    fontWeight: 'bold',
   },
   checklistCategory: {
-    width: 120,
-    fontWeight: 'bold',
+    width: 52,
+    fontSize: 8,
   },
   checklistDescription: {
-    flex: 1,
-    paddingRight: 10,
+    width: 130,
+    paddingRight: 6,
+    fontSize: 8,
+  },
+  checklistAcceptance: {
+    width: 140,
+    paddingRight: 6,
+    fontSize: 8,
   },
   checklistStatus: {
-    width: 45,
+    width: 48,
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 9,
+    fontSize: 8,
+  },
+  checklistDetail: {
+    width: 85,
+    fontSize: 8,
+    color: '#374151',
+    paddingRight: 4,
+  },
+  checklistResolution: {
+    width: 85,
+    fontSize: 8,
+    color: '#374151',
   },
   statusPass: {
     color: '#16a34a',
@@ -96,10 +123,10 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   observations: {
-    marginTop: 10,
+    marginTop: 8,
     padding: 10,
     border: '1px solid #d1d5db',
-    minHeight: 100,
+    minHeight: 70,
   },
 })
 
@@ -155,30 +182,69 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Checklist de Inspeção</Text>
           {data.checklist.length > 0 ? (
-            data.checklist.map((item) => {
-              const statusStyle =
-                item.status === 'pass'
-                  ? styles.statusPass
-                  : item.status === 'fail'
-                    ? styles.statusFail
-                    : styles.statusNA
+            <>
+              <View style={[styles.checklistRow, styles.checklistHeaderRow]}>
+                <Text style={[styles.checklistCategory, styles.headerCell]}>
+                  Categoria
+                </Text>
+                <Text style={[styles.checklistDescription, styles.headerCell]}>
+                  Itens Inspecionados
+                </Text>
+                <Text style={[styles.checklistAcceptance, styles.headerCell]}>
+                  Critério de aceitação
+                </Text>
+                <Text style={[styles.checklistStatus, styles.headerCell]}>
+                  Status
+                </Text>
+                <Text style={[styles.checklistDetail, styles.headerCell]}>
+                  Detalhamento
+                </Text>
+                <Text style={[styles.checklistResolution, styles.headerCell]}>
+                  Tratativa
+                </Text>
+              </View>
+              {data.checklist.map((item) => {
+                const statusStyle =
+                  item.status === 'pass'
+                    ? styles.statusPass
+                    : item.status === 'fail'
+                      ? styles.statusFail
+                      : styles.statusNA
 
-              return (
-                <View key={item.id} style={styles.checklistItem}>
-                  <Text style={styles.checklistCategory}>{item.category}</Text>
-                  <Text style={styles.checklistDescription}>
-                    {item.description}
-                  </Text>
-                  <Text style={[styles.checklistStatus, statusStyle]}>
-                    {item.status === 'pass'
-                      ? 'APROV'
-                      : item.status === 'fail'
-                        ? 'REPROV'
-                        : 'N/A'}
-                  </Text>
-                </View>
-              )
-            })
+                const detailText =
+                  item.status === 'fail' ? item.failReason || '-' : '-'
+
+                const resolutionText =
+                  item.status === 'fail'
+                    ? item.failResolution === 'needs_correction'
+                      ? 'Solicitar correção'
+                      : item.failResolution === 'non_conform'
+                        ? 'Aceitar como está'
+                        : '-'
+                    : '-'
+
+                return (
+                  <View key={item.id} style={styles.checklistRow}>
+                    <Text style={styles.checklistCategory}>{item.category}</Text>
+                    <Text style={styles.checklistDescription}>
+                      {item.description}
+                    </Text>
+                    <Text style={styles.checklistAcceptance}>
+                      {item.acceptanceCriteria || '-'}
+                    </Text>
+                    <Text style={[styles.checklistStatus, statusStyle]}>
+                      {item.status === 'pass'
+                        ? 'APROV'
+                        : item.status === 'fail'
+                          ? 'REPROV'
+                          : 'N/A'}
+                    </Text>
+                    <Text style={styles.checklistDetail}>{detailText}</Text>
+                    <Text style={styles.checklistResolution}>{resolutionText}</Text>
+                  </View>
+                )
+              })}
+            </>
           ) : (
             <Text style={{ paddingLeft: 10, color: '#6b7280' }}>
               Nenhum item adicionado
