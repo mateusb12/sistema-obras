@@ -113,8 +113,8 @@ export function InspectionPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-      <div className="overflow-y-auto pr-4">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:h-[calc(100dvh-5.5rem)] lg:overflow-hidden">
+      <div className="min-h-0 overflow-y-auto pr-4">
         <InspectionForm
           register={register}
           team={formData.team}
@@ -126,8 +126,8 @@ export function InspectionPage() {
         />
       </div>
 
-      <div className="block mt-6 overflow-x-auto">
-        <div className="min-w-[600px] mx-auto">
+      <div className="mt-6 block min-h-0 overflow-y-auto overflow-x-auto lg:mt-0">
+        <div className="mx-auto min-w-[600px]">
           <PDFPreview data={formData} />
         </div>
       </div>
