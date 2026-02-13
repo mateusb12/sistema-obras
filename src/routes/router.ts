@@ -8,6 +8,8 @@ export const APP_ROUTES = {
   INVENTORY_DASHBOARD: '/inventory/dashboard',
   INVENTORY_REGISTRY: '/inventory/materials',
   INVENTORY_LOGS: '/inventory/logs',
+  PERSONNEL_DASHBOARD: '/personnel/dashboard',
+  PERSONNEL_LIST: '/personnel/employees',
 } as const
 
 export type AppRoute = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]
