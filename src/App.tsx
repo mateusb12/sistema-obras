@@ -17,10 +17,10 @@ function App() {
       setPathname(getCurrentRoutePath())
     }
 
-    window.addEventListener('popstate', onPathChange)
+    window.addEventListener('hashchange', onPathChange)
 
     return () => {
-      window.removeEventListener('popstate', onPathChange)
+      window.removeEventListener('hashchange', onPathChange)
     }
   }, [])
 

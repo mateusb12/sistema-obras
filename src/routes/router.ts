@@ -1,5 +1,3 @@
-const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '')
-
 export const APP_ROUTES = {
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
@@ -10,32 +8,24 @@ export const APP_ROUTES = {
 
 export type AppRoute = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]
 
-function withBasePath(path: string): string {
-  return `${BASE_PATH}${path}`.replace(/\/+/g, '/')
-}
-
 export function getCurrentRoutePath(): string {
-  const pathname = window.location.pathname
+  const hash = window.location.hash
 
-  if (!BASE_PATH || BASE_PATH === '/') {
-    return pathname
+  if (!hash) {
+    return '/'
   }
 
-  if (pathname.startsWith(BASE_PATH)) {
-    const normalized = pathname.slice(BASE_PATH.length)
-    return normalized || '/'
-  }
+  const normalizedHash = hash.startsWith('#') ? hash.slice(1) : hash
 
-  return pathname
+  return normalizedHash || '/'
 }
 
 export function navigateTo(path: AppRoute): void {
-  const fullPath = withBasePath(path)
+  const currentPath = getCurrentRoutePath()
 
-  if (window.location.pathname === fullPath) {
+  if (currentPath === path) {
     return
   }
 
-  window.history.pushState({}, '', fullPath)
-  window.dispatchEvent(new PopStateEvent('popstate'))
+  window.location.hash = path
 }
