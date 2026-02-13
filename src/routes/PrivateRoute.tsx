@@ -27,5 +27,5 @@ export function PrivateRoute({ children, allowedRoles }: PrivateRouteProps) {
     )
   }
 
-  return <>{children}</>
+  return children
 }

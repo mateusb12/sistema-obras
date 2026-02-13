@@ -1,4 +1,12 @@
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useAuth } from '../../auth/useAuth'
+import {
+  clearInspectionInEdition,
+  getInspectionById,
+  getInspectionInEditionId,
+  upsertInspection,
+} from '../inspection-history'
 import { InspectionForm } from './InspectionForm'
 import { PDFPreview } from './PDFPreview'
 import type { InspectionForm as InspectionFormType } from './types'
@@ -57,46 +65,78 @@ const STANDARD_CHECKLIST = [
   {
     category: 'Acabamento',
     description: 'Verificação de reboco e regularidade',
-    acceptanceCriteria: 'Superfície regular, sem destacamentos ou fissuras ativas',
+    acceptanceCriteria:
+      'Superfície regular, sem destacamentos ou fissuras ativas',
     sampling: 'Amostral',
     inspectionMethod: 'Régua de alumínio e inspeção visual',
   },
   {
     category: 'Segurança',
     description: 'Uso correto de EPIs pela equipe',
-    acceptanceCriteria: 'Todos os colaboradores com EPI completo conforme atividade',
+    acceptanceCriteria:
+      'Todos os colaboradores com EPI completo conforme atividade',
     sampling: '100%',
     inspectionMethod: 'Check visual em campo',
   },
 ]
 
-export function InspectionPage() {
-  const { register, watch, setValue } = useForm<InspectionFormType>({
-    defaultValues: {
-      header: {
-        projectName: 'Flamboyant II',
-        location: 'Apto 103B',
-        date: new Date().toISOString().split('T')[0],
-        inspectorName: 'Rafael Bruno',
-      },
-      team: [],
-
-      checklist: STANDARD_CHECKLIST.map((item) => ({
-        id: crypto.randomUUID(),
-        category: item.category,
-        description: item.description,
-        acceptanceCriteria: item.acceptanceCriteria,
-        sampling: item.sampling,
-        inspectionMethod: item.inspectionMethod,
-        status: 'na',
-        failReason: '',
-        failResolution: null,
-      })),
-      observations: '',
+function getDefaultValues(): InspectionFormType {
+  return {
+    header: {
+      title: 'Inspeção 104-B',
+      projectName: 'Flamboyant II',
+      location: '102B',
+      date: new Date().toISOString().split('T')[0],
+      inspectorName: 'Rafael Bruno',
     },
+    team: [],
+
+    checklist: STANDARD_CHECKLIST.map((item) => ({
+      id: crypto.randomUUID(),
+      category: item.category,
+      description: item.description,
+      acceptanceCriteria: item.acceptanceCriteria,
+      sampling: item.sampling,
+      inspectionMethod: item.inspectionMethod,
+      status: 'na',
+      failReason: '',
+      failResolution: null,
+    })),
+    observations: '',
+  }
+}
+
+export function InspectionPage() {
+  const { user } = useAuth()
+  const [saveMessage, setSaveMessage] = useState('')
+  const [editingInspectionId, setEditingInspectionId] = useState<string | null>(
+    null,
+  )
+
+  const { register, watch, setValue, reset } = useForm<InspectionFormType>({
+    defaultValues: getDefaultValues(),
   })
 
   const formData = watch()
+
+  useEffect(() => {
+    const inspectionId = getInspectionInEditionId()
+
+    if (!inspectionId) {
+      return
+    }
+
+    const inspection = getInspectionById(inspectionId)
+
+    if (!inspection || inspection.status !== 'DRAFT') {
+      clearInspectionInEdition()
+      return
+    }
+
+    setEditingInspectionId(inspection.id)
+    reset(inspection.data)
+    clearInspectionInEdition()
+  }, [reset])
 
   const handleTeamChange = (team: InspectionFormType['team']) => {
     setValue('team', team)
@@ -112,6 +152,29 @@ export function InspectionPage() {
     setValue('header.projectName', projectName)
   }
 
+  const persistInspection = (status: 'DRAFT' | 'FINISHED') => {
+    const saved = upsertInspection({
+      id: editingInspectionId || undefined,
+      form: formData,
+      status,
+      createdBy: user?.name || 'Usuário não identificado',
+    })
+
+    setEditingInspectionId(status === 'DRAFT' ? saved.id : null)
+    setSaveMessage(
+      status === 'DRAFT'
+        ? 'Rascunho salvo com sucesso!'
+        : 'Inspeção finalizada com sucesso!',
+    )
+
+    if (status === 'FINISHED') {
+      reset(getDefaultValues())
+      clearInspectionInEdition()
+    }
+
+    window.setTimeout(() => setSaveMessage(''), 3000)
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:h-[calc(100dvh-5.5rem)] lg:overflow-hidden">
       <div className="min-h-0 overflow-y-auto pr-4">
@@ -123,7 +186,15 @@ export function InspectionPage() {
           onChecklistChange={handleChecklistChange}
           selectedProject={formData.header.projectName}
           onProjectChange={handleProjectChange}
+          onSaveDraft={() => persistInspection('DRAFT')}
+          onFinish={() => persistInspection('FINISHED')}
+          isEditing={Boolean(editingInspectionId)}
         />
+        {saveMessage && (
+          <p className="mt-4 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300">
+            {saveMessage}
+          </p>
+        )}
       </div>
 
       <div className="mt-6 block min-h-0 overflow-y-auto overflow-x-auto lg:mt-0">

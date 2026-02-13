@@ -18,6 +18,7 @@ type FullLayoutProps = {
 const NAV_ITEMS: Array<{ label: string; route: AppRoute }> = [
   { label: 'Dashboard', route: APP_ROUTES.DASHBOARD },
   { label: 'Ficha de Inspeção', route: APP_ROUTES.INSPECTION },
+  { label: 'Histórico', route: APP_ROUTES.HISTORY },
   { label: 'Engenharia', route: APP_ROUTES.ENGINEERING },
   { label: 'Admin', route: APP_ROUTES.ADMIN },
 ]

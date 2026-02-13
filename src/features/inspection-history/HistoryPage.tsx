@@ -1,0 +1,342 @@
+import { useMemo, useState } from 'react'
+import { APP_ROUTES, navigateTo } from '../../routes/router'
+import { PDFPreview } from '../site-inspection-report'
+import {
+  LOCATION_OPTIONS,
+  PROJECT_CARDS,
+} from '../site-inspection-report/constants'
+import {
+  deleteInspection,
+  getSavedInspections,
+  renameInspection,
+  setInspectionInEdition,
+} from './inspectionHistoryService'
+import type { InspectionHistoryEntry } from './types'
+
+function hasNonConformity(inspection: InspectionHistoryEntry): boolean {
+  return inspection.data.checklist.some((item) => item.status === 'fail')
+}
+
+function formatDate(dateValue: string): string {
+  return new Date(`${dateValue}T00:00:00`).toLocaleDateString('pt-BR')
+}
+
+export function HistoryPage() {
+  const [titleFilter, setTitleFilter] = useState('')
+  const [selectedProject, setSelectedProject] = useState('')
+  const [locationFilter, setLocationFilter] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [onlyFails, setOnlyFails] = useState(false)
+  const [selectedInspection, setSelectedInspection] =
+    useState<InspectionHistoryEntry | null>(null)
+  const [inspections, setInspections] = useState<InspectionHistoryEntry[]>(
+    getSavedInspections(),
+  )
+
+  const reloadInspections = () => {
+    setInspections(getSavedInspections())
+  }
+
+  const handleRename = (inspection: InspectionHistoryEntry) => {
+    const nextTitle = window.prompt(
+      'Novo título da inspeção',
+      inspection.data.header.title,
+    )
+
+    if (!nextTitle || !nextTitle.trim()) {
+      return
+    }
+
+    renameInspection(inspection.id, nextTitle.trim())
+    reloadInspections()
+  }
+
+  const handleDelete = (inspection: InspectionHistoryEntry) => {
+    const confirmDelete = window.confirm(
+      `Tem certeza que deseja deletar "${inspection.data.header.title}"?`,
+    )
+
+    if (!confirmDelete) {
+      return
+    }
+
+    deleteInspection(inspection.id)
+    if (selectedInspection?.id === inspection.id) {
+      setSelectedInspection(null)
+    }
+    reloadInspections()
+  }
+
+  const handleEdit = (inspection: InspectionHistoryEntry) => {
+    if (inspection.status !== 'DRAFT') {
+      return
+    }
+
+    setInspectionInEdition(inspection.id)
+    navigateTo(APP_ROUTES.INSPECTION)
+  }
+
+  const filteredInspections = useMemo(() => {
+    return inspections.filter((inspection) => {
+      const projectMatches =
+        !selectedProject ||
+        inspection.data.header.projectName === selectedProject
+
+      const titleMatches =
+        !titleFilter ||
+        inspection.data.header.title
+          .toLowerCase()
+          .includes(titleFilter.toLowerCase())
+
+      const locationMatches =
+        !locationFilter ||
+        inspection.searchIndex.includes(locationFilter.toLowerCase())
+
+      const inspectionDate = inspection.data.header.date
+      const startMatches = !startDate || inspectionDate >= startDate
+      const endMatches = !endDate || inspectionDate <= endDate
+      const failsMatches = !onlyFails || hasNonConformity(inspection)
+
+      return (
+        projectMatches &&
+        titleMatches &&
+        locationMatches &&
+        startMatches &&
+        endMatches &&
+        failsMatches
+      )
+    })
+  }, [
+    endDate,
+    inspections,
+    locationFilter,
+    onlyFails,
+    selectedProject,
+    startDate,
+    titleFilter,
+  ])
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Histórico de Inspeções
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          CRUD completo: editar rascunhos, visualizar finalizadas, renomear e
+          deletar.
+        </p>
+      </header>
+
+      <section className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 md:grid-cols-2 lg:grid-cols-6">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Título
+          </label>
+          <input
+            value={titleFilter}
+            onChange={(event) => setTitleFilter(event.target.value)}
+            placeholder="Ex: Inspeção 104-B"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Projeto
+          </label>
+          <select
+            value={selectedProject}
+            onChange={(event) => setSelectedProject(event.target.value)}
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          >
+            <option value="">Todos</option>
+            {PROJECT_CARDS.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Localização / Unidade
+          </label>
+          <input
+            value={locationFilter}
+            onChange={(event) => setLocationFilter(event.target.value)}
+            list="history-location-options"
+            placeholder="Ex: 102B"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          />
+          <datalist id="history-location-options">
+            {[
+              ...LOCATION_OPTIONS.ladoA,
+              ...LOCATION_OPTIONS.ladoB,
+              ...LOCATION_OPTIONS.areasComuns,
+            ].map((option) => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Data inicial
+          </label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(event) => setStartDate(event.target.value)}
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Data final
+          </label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(event) => setEndDate(event.target.value)}
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          />
+        </div>
+
+        <label className="flex items-end gap-2 pb-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="checkbox"
+            checked={onlyFails}
+            onChange={(event) => setOnlyFails(event.target.checked)}
+          />
+          Exibir apenas com não-conformidades
+        </label>
+      </section>
+
+      <section className="space-y-3">
+        {filteredInspections.length === 0 && (
+          <p className="rounded-md border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            Nenhuma inspeção encontrada com os filtros atuais.
+          </p>
+        )}
+
+        {filteredInspections.map((inspection) => {
+          const failItems = inspection.data.checklist.filter(
+            (item) => item.status === 'fail',
+          )
+
+          return (
+            <article
+              key={inspection.id}
+              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                    {inspection.data.header.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {inspection.data.header.projectName} —{' '}
+                    {inspection.data.header.location}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Status:{' '}
+                    <span
+                      className={
+                        inspection.status === 'DRAFT'
+                          ? 'font-semibold text-amber-600 dark:text-amber-300'
+                          : 'font-semibold text-green-700 dark:text-green-300'
+                      }
+                    >
+                      {inspection.status}
+                    </span>{' '}
+                    • Data da inspeção:{' '}
+                    {formatDate(inspection.data.header.date)}
+                    {' • '}Atualizado em:{' '}
+                    {new Date(inspection.updatedAt).toLocaleString('pt-BR')}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {inspection.status === 'DRAFT' && (
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(inspection)}
+                      className="rounded-md bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600"
+                    >
+                      Editar
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInspection(inspection)}
+                    className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Visualizar
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRename(inspection)}
+                    className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    Renomear
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(inspection)}
+                    className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30"
+                  >
+                    Deletar
+                  </button>
+                </div>
+              </div>
+
+              {failItems.length > 0 && (
+                <div className="mt-3 rounded-md bg-red-50 p-3 text-sm dark:bg-red-900/20">
+                  <p className="font-medium text-red-700 dark:text-red-300">
+                    Não-conformidades ({failItems.length})
+                  </p>
+                  <ul className="mt-1 list-disc pl-5 text-red-700 dark:text-red-300">
+                    {failItems.map((item) => (
+                      <li key={item.id}>
+                        {item.description} — Tratativa:{' '}
+                        {item.failResolution === 'non_conform'
+                          ? 'Aceitar como está'
+                          : item.failResolution === 'needs_correction'
+                            ? 'Solicitar correção'
+                            : 'Não definida'}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </article>
+          )
+        })}
+      </section>
+
+      {selectedInspection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="relative h-[90dvh] w-full max-w-6xl rounded-lg bg-white p-4 dark:bg-gray-900">
+            <button
+              type="button"
+              onClick={() => setSelectedInspection(null)}
+              className="absolute right-4 top-4 rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 dark:border-gray-600 dark:text-gray-200"
+            >
+              Fechar
+            </button>
+            <div className="h-full overflow-hidden pt-8">
+              <PDFPreview data={selectedInspection.data} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
