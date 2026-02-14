@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { FullLayout } from './components'
 import { DummyLoginPage } from './components/DummyLoginPage'
 import { PrivateRoute } from './routes/PrivateRoute'
-import { APP_ROUTES, getCurrentRoutePath, navigateTo } from './routes/router'
+import {
+  APP_ROUTES,
+  getCurrentRoutePath,
+  getRouteParam,
+  navigateTo,
+} from './routes/router'
 import { ROLES } from './auth/types'
 import { AdminPanel, EngineeringPanel } from './pages/RolePanels'
 import { useAuth } from './auth/useAuth'
@@ -15,6 +20,7 @@ import {
 } from './features/material-inventory'
 import {
   ComplianceDashboard,
+  EmployeeDetails,
   EmployeeList,
 } from './features/personnel-compliance'
 
@@ -130,6 +136,17 @@ function App() {
         <PrivateRoute>
           <FullLayout>
             <ComplianceDashboard />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    const employeeId = getRouteParam(pathname, APP_ROUTES.PERSONNEL_DETAILS)
+    if (employeeId) {
+      return (
+        <PrivateRoute>
+          <FullLayout>
+            <EmployeeDetails employeeId={employeeId} />
           </FullLayout>
         </PrivateRoute>
       )

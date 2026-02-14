@@ -24,6 +24,7 @@ const STORAGE_KEYS = {
 } as const
 
 const REQUIRED_VACCINES = ['Tétano', 'Hepatite B', 'Febre Amarela'] as const
+export const PERSONNEL_COMPLIANCE_UPDATED_EVENT = 'personnel-compliance:updated'
 
 function addDays(baseDate: Date, days: number): string {
   const next = new Date(baseDate)
@@ -58,6 +59,14 @@ function evaluateDateStatus(date?: string): ComplianceStatus {
   if (remainingDays < 0) return 'expired'
   if (remainingDays <= WARNING_WINDOW_DAYS) return 'warning'
   return 'regular'
+}
+
+function notifyUpdated(): void {
+  window.dispatchEvent(new CustomEvent(PERSONNEL_COMPLIANCE_UPDATED_EVENT))
+}
+
+export function getComplianceStatusByDate(date?: string): ComplianceStatus {
+  return evaluateDateStatus(date)
 }
 
 function toEmployeeDocument(record: DocumentRecord): EmployeeDocument {
@@ -627,6 +636,7 @@ export async function createEmployee(input: Employee): Promise<Employee> {
     ...(await getAllVaccineRecords()),
     ...createdVaccines,
   ])
+  notifyUpdated()
 
   const fullEmployee = await getEmployeeById(createdEmployee.id)
   return fullEmployee as Employee
@@ -656,6 +666,7 @@ export async function updateEmployee(
     STORAGE_KEYS.employees,
     employees.map((employee) => (employee.id === id ? updated : employee)),
   )
+  notifyUpdated()
 
   const fullEmployee = await getEmployeeById(id)
   return fullEmployee ?? null
@@ -685,6 +696,8 @@ export async function deleteEmployee(id: string): Promise<boolean> {
     (await getAllVaccineRecords()).filter((record) => record.employeeId !== id),
   )
 
+  notifyUpdated()
+
   return true
 }
 
@@ -694,7 +707,43 @@ export async function registerVaccine(
   const records = await getAllVaccineRecords()
   const created: VaccineRecord = { ...input, id: crypto.randomUUID() }
   writeArraySync(STORAGE_KEYS.vaccines, [...records, created])
+  notifyUpdated()
   return created
+}
+
+export async function updateVaccine(
+  id: string,
+  input: Omit<VaccineRecord, 'id' | 'employeeId'>,
+): Promise<VaccineRecord | null> {
+  const vaccines = await getAllVaccineRecords()
+  const current = vaccines.find((record) => record.id === id)
+
+  if (!current) return null
+
+  const updated: VaccineRecord = {
+    ...current,
+    ...input,
+    id,
+    employeeId: current.employeeId,
+  }
+
+  writeArraySync(
+    STORAGE_KEYS.vaccines,
+    vaccines.map((record) => (record.id === id ? updated : record)),
+  )
+  notifyUpdated()
+  return updated
+}
+
+export async function deleteVaccine(id: string): Promise<boolean> {
+  const vaccines = await getAllVaccineRecords()
+  const filtered = vaccines.filter((record) => record.id !== id)
+
+  if (vaccines.length === filtered.length) return false
+
+  writeArraySync(STORAGE_KEYS.vaccines, filtered)
+  notifyUpdated()
+  return true
 }
 
 export async function registerTraining(
@@ -708,7 +757,44 @@ export async function registerTraining(
   }
 
   writeArraySync(STORAGE_KEYS.trainings, [...records, created])
+  notifyUpdated()
   return created
+}
+
+export async function updateTraining(
+  id: string,
+  input: Omit<TrainingRecord, 'id' | 'employeeId' | 'status'>,
+): Promise<TrainingRecord | null> {
+  const records = await getAllTrainingRecords()
+  const current = records.find((record) => record.id === id)
+
+  if (!current) return null
+
+  const updated: TrainingRecord = {
+    ...current,
+    ...input,
+    id,
+    employeeId: current.employeeId,
+    status: evaluateDateStatus(input.validUntil),
+  }
+
+  writeArraySync(
+    STORAGE_KEYS.trainings,
+    records.map((record) => (record.id === id ? updated : record)),
+  )
+  notifyUpdated()
+  return updated
+}
+
+export async function deleteTraining(id: string): Promise<boolean> {
+  const records = await getAllTrainingRecords()
+  const filtered = records.filter((record) => record.id !== id)
+
+  if (records.length === filtered.length) return false
+
+  writeArraySync(STORAGE_KEYS.trainings, filtered)
+  notifyUpdated()
+  return true
 }
 
 export async function registerDocument(
@@ -717,7 +803,43 @@ export async function registerDocument(
   const records = await getDocuments()
   const created: DocumentRecord = { ...input, id: crypto.randomUUID() }
   writeArraySync(STORAGE_KEYS.documents, [...records, created])
+  notifyUpdated()
   return created
+}
+
+export async function updateDocument(
+  id: string,
+  input: Omit<DocumentRecord, 'id' | 'employeeId'>,
+): Promise<DocumentRecord | null> {
+  const records = await getDocuments()
+  const current = records.find((record) => record.id === id)
+
+  if (!current) return null
+
+  const updated: DocumentRecord = {
+    ...current,
+    ...input,
+    id,
+    employeeId: current.employeeId,
+  }
+
+  writeArraySync(
+    STORAGE_KEYS.documents,
+    records.map((record) => (record.id === id ? updated : record)),
+  )
+  notifyUpdated()
+  return updated
+}
+
+export async function deleteDocument(id: string): Promise<boolean> {
+  const records = await getDocuments()
+  const filtered = records.filter((record) => record.id !== id)
+
+  if (records.length === filtered.length) return false
+
+  writeArraySync(STORAGE_KEYS.documents, filtered)
+  notifyUpdated()
+  return true
 }
 
 export async function getAllTrainingsStatus(): Promise<TrainingStatusGroup[]> {
