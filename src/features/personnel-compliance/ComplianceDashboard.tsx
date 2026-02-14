@@ -2,6 +2,7 @@ import { AlertTriangle, CalendarClock, ShieldCheck, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { COMPLIANCE_STATUS_BADGES, COMPLIANCE_STATUS_LABELS } from './constants'
 import {
+  PERSONNEL_COMPLIANCE_UPDATED_EVENT,
   getComplianceSummary,
   getCriticalAlerts,
   getUpcomingAlerts,
@@ -20,15 +21,25 @@ export function ComplianceDashboard() {
   const [upcomingRows, setUpcomingRows] = useState<EmployeeComplianceRow[]>([])
 
   useEffect(() => {
-    Promise.all([
-      getComplianceSummary(),
-      getCriticalAlerts(),
-      getUpcomingAlerts(),
-    ]).then(([savedSummary, savedCritical, savedUpcoming]) => {
-      setSummary(savedSummary)
-      setCriticalRows(savedCritical)
-      setUpcomingRows(savedUpcoming)
-    })
+    const load = () => {
+      Promise.all([
+        getComplianceSummary(),
+        getCriticalAlerts(),
+        getUpcomingAlerts(),
+      ]).then(([savedSummary, savedCritical, savedUpcoming]) => {
+        setSummary(savedSummary)
+        setCriticalRows(savedCritical)
+        setUpcomingRows(savedUpcoming)
+      })
+    }
+
+    const timer = window.setTimeout(load, 0)
+    window.addEventListener(PERSONNEL_COMPLIANCE_UPDATED_EVENT, load)
+
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener(PERSONNEL_COMPLIANCE_UPDATED_EVENT, load)
+    }
   }, [])
 
   return (

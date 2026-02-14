@@ -10,6 +10,7 @@ export const APP_ROUTES = {
   INVENTORY_LOGS: '/inventory/logs',
   PERSONNEL_DASHBOARD: '/personnel/dashboard',
   PERSONNEL_LIST: '/personnel/employees',
+  PERSONNEL_DETAILS: '/personnel/employees/:id',
 } as const
 
 export type AppRoute = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]
@@ -26,7 +27,7 @@ export function getCurrentRoutePath(): string {
   return normalizedHash || '/'
 }
 
-export function navigateTo(path: AppRoute): void {
+export function navigateTo(path: string): void {
   const currentPath = getCurrentRoutePath()
 
   if (currentPath === path) {
@@ -34,4 +35,22 @@ export function navigateTo(path: AppRoute): void {
   }
 
   window.location.hash = path
+}
+
+export function getPersonnelDetailsPath(employeeId: string): string {
+  return `/personnel/employees/${employeeId}`
+}
+
+export function getRouteParam(
+  pathname: string,
+  pattern: string,
+): string | null {
+  const [basePath] = pattern.split('/:')
+
+  if (!pathname.startsWith(`${basePath}/`)) {
+    return null
+  }
+
+  const param = pathname.slice(basePath.length + 1)
+  return param || null
 }

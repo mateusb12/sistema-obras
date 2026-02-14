@@ -6,16 +6,27 @@ import { useAuth } from '../auth/useAuth'
 import {
   APP_ROUTES,
   getCurrentRoutePath,
+  getPersonnelDetailsPath,
+  getRouteParam,
   navigateTo,
   type AppRoute,
 } from '../routes/router'
 import { ROLES } from '../auth/types'
+import {
+  getEmployeeById,
+  PERSONNEL_COMPLIANCE_UPDATED_EVENT,
+} from '../features/personnel-compliance/complianceService'
 
 type FullLayoutProps = {
   children?: ReactNode
 }
 
 type NavItem = { label: string; route: AppRoute }
+
+type ActiveEmployeeNav = {
+  id: string
+  fullName: string
+}
 
 const NAV_MODULES: Array<{ label: string; items: NavItem[] }> = [
   {
@@ -58,15 +69,23 @@ const SIDEBAR_MAX_WIDTH = 420
 const SIDEBAR_DEFAULT_WIDTH = 288
 
 function getExpandedModulesState(pathname: string): Record<string, boolean> {
+  const isPersonnelDetails =
+    getRouteParam(pathname, APP_ROUTES.PERSONNEL_DETAILS) !== null
+
   const activeModule = NAV_MODULES.find((module) =>
     module.items.some((item) => item.route === pathname),
   )
 
   return Object.fromEntries(
-    NAV_MODULES.map((module) => [
-      module.label,
-      module.label === 'Inspeção' || module.label === activeModule?.label,
-    ]),
+    NAV_MODULES.map((module) => {
+      const isPersonnelModule = module.label === 'Pessoas & Compliance'
+      return [
+        module.label,
+        module.label === 'Inspeção' ||
+          module.label === activeModule?.label ||
+          (isPersonnelModule && isPersonnelDetails),
+      ]
+    }),
   )
 }
 
@@ -76,6 +95,9 @@ export function FullLayout({ children }: FullLayoutProps) {
   const [pathname, setPathname] = useState(getCurrentRoutePath())
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH)
+  const [activeEmployeeNav, setActiveEmployeeNav] =
+    useState<ActiveEmployeeNav | null>(null)
+  const [isEmployeeSubmenuOpen, setIsEmployeeSubmenuOpen] = useState(true)
   const [expandedModules, setExpandedModules] = useState<
     Record<string, boolean>
   >(() =>
@@ -101,6 +123,58 @@ export function FullLayout({ children }: FullLayoutProps) {
       window.removeEventListener('hashchange', onPathChange)
     }
   }, [])
+
+  useEffect(() => {
+    const activeEmployeeId = getRouteParam(
+      pathname,
+      APP_ROUTES.PERSONNEL_DETAILS,
+    )
+
+    const timer = window.setTimeout(() => {
+      if (!activeEmployeeId) {
+        setActiveEmployeeNav(null)
+        return
+      }
+
+      void getEmployeeById(activeEmployeeId).then((employee) => {
+        if (!employee) {
+          setActiveEmployeeNav(null)
+          return
+        }
+
+        setActiveEmployeeNav({ id: employee.id, fullName: employee.fullName })
+      })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    const reload = () => {
+      const activeEmployeeId = getRouteParam(
+        pathname,
+        APP_ROUTES.PERSONNEL_DETAILS,
+      )
+      if (!activeEmployeeId) return
+
+      void getEmployeeById(activeEmployeeId).then((employee) => {
+        if (!employee) {
+          setActiveEmployeeNav(null)
+          return
+        }
+
+        setActiveEmployeeNav({ id: employee.id, fullName: employee.fullName })
+      })
+    }
+
+    window.addEventListener(PERSONNEL_COMPLIANCE_UPDATED_EVENT, reload)
+
+    return () => {
+      window.removeEventListener(PERSONNEL_COMPLIANCE_UPDATED_EVENT, reload)
+    }
+  }, [pathname])
 
   const handleLogout = () => {
     logout()
@@ -162,7 +236,7 @@ export function FullLayout({ children }: FullLayoutProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r border-gray-200 bg-white transition-transform duration-200 dark:border-gray-700 dark:bg-gray-800 ${
+        className={`fixed inset-y-0 left-0 z-30 flex flex-col overflow-hidden border-r border-gray-200 bg-white transition-transform duration-200 dark:border-gray-700 dark:bg-gray-800 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
         style={{ width: `var(--sidebar-width)` }}
@@ -195,7 +269,7 @@ export function FullLayout({ children }: FullLayoutProps) {
           </p>
         </div>
 
-        <nav className="flex-1 space-y-3 px-4 py-5">
+        <nav className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-5">
           {NAV_MODULES.map((module) => {
             const isExpanded = expandedModules[module.label]
 
@@ -226,6 +300,67 @@ export function FullLayout({ children }: FullLayoutProps) {
                   <div className="mt-2 space-y-2">
                     {module.items.map((item) => {
                       const isActive = pathname === item.route
+                      const isEmployeeBaseItem =
+                        item.route === APP_ROUTES.PERSONNEL_LIST &&
+                        module.label === 'Pessoas & Compliance'
+                      const detailPath = activeEmployeeNav
+                        ? getPersonnelDetailsPath(activeEmployeeNav.id)
+                        : ''
+                      const isEmployeeDetailActive =
+                        Boolean(detailPath) && pathname === detailPath
+
+                      if (isEmployeeBaseItem) {
+                        return (
+                          <div key={item.route} className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                className={`flex-1 rounded-md border px-3 py-2 text-left text-sm transition ${
+                                  isActive || isEmployeeDetailActive
+                                    ? 'border-blue-600 bg-blue-50 font-medium text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300'
+                                    : 'border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+                                }`}
+                                onClick={() => navigateTo(item.route)}
+                              >
+                                {item.label}
+                              </button>
+
+                              {activeEmployeeNav && (
+                                <button
+                                  type="button"
+                                  className="rounded-md border border-gray-300 p-2 text-gray-600 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                                  onClick={() =>
+                                    setIsEmployeeSubmenuOpen(
+                                      (previous) => !previous,
+                                    )
+                                  }
+                                  aria-label="Expandir funcionário selecionado"
+                                >
+                                  {isEmployeeSubmenuOpen ? (
+                                    <ChevronDown size={14} />
+                                  ) : (
+                                    <ChevronRight size={14} />
+                                  )}
+                                </button>
+                              )}
+                            </div>
+
+                            {activeEmployeeNav && isEmployeeSubmenuOpen && (
+                              <button
+                                type="button"
+                                className={`ml-3 w-[calc(100%-0.75rem)] rounded-md border px-3 py-2 text-left text-sm transition ${
+                                  isEmployeeDetailActive
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/40 dark:text-blue-300'
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+                                }`}
+                                onClick={() => navigateTo(detailPath)}
+                              >
+                                {activeEmployeeNav.fullName}
+                              </button>
+                            )}
+                          </div>
+                        )
+                      }
 
                       return (
                         <button
