@@ -13,7 +13,7 @@ export const PERSONNEL_ROLES = [
   'Carpinteiro',
 ] as const
 
-export const NR_TRAINING_OPTIONS = ['NR-18', 'NR-35', 'NR-10', 'NR-06'] as const
+export const NR_TRAINING_OPTIONS = ['NR-10', 'NR-18', 'NR-35'] as const
 
 export const COMPLIANCE_STATUS_LABELS: Record<ComplianceStatus, string> = {
   regular: 'Regular',
