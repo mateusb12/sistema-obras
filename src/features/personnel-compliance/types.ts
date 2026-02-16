@@ -1,4 +1,12 @@
 export type ComplianceStatus = 'regular' | 'warning' | 'expired'
+export type ValidationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface Attachment {
+  fileName: string
+  fileType: string
+  base64: string
+  size: number
+}
 
 export interface EmployeeDocument {
   id: string
@@ -49,6 +57,9 @@ export interface TrainingRecord {
   dateCompleted: string
   validUntil: string
   status: ComplianceStatus
+  attachment?: Attachment
+  validationStatus: ValidationStatus
+  validationFeedback?: string
 }
 
 export interface VaccineRecord {
@@ -58,6 +69,9 @@ export interface VaccineRecord {
   doseInfo: string
   dateAdministered?: string
   nextDueDate?: string
+  attachment?: Attachment
+  validationStatus: ValidationStatus
+  validationFeedback?: string
 }
 
 export interface DocumentRecord {
@@ -66,6 +80,9 @@ export interface DocumentRecord {
   docType: string
   issueDate: string
   expirationDate: string
+  attachment?: Attachment
+  validationStatus: ValidationStatus
+  validationFeedback?: string
 }
 
 export interface TrainingStatusGroup {

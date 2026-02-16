@@ -1,5 +1,6 @@
 import { WARNING_WINDOW_DAYS } from './constants'
 import type {
+  Attachment,
   ComplianceSummary,
   ComplianceStatus,
   DocumentRecord,
@@ -12,6 +13,7 @@ import type {
   TrainingRecord,
   TrainingStatusGroup,
   VaccineRecord,
+  ValidationStatus,
 } from './types'
 
 const PERSONNEL_SEED_MARKER_KEY = 'cm.personnel.seeded.v2'
@@ -24,6 +26,75 @@ const STORAGE_KEYS = {
 } as const
 
 const REQUIRED_VACCINES = ['Tétano', 'Hepatite B', 'Febre Amarela'] as const
+
+const MAX_ATTACHMENT_SIZE_BYTES = 300 * 1024
+const APPROX_LOCALSTORAGE_LIMIT_BYTES = 5 * 1024 * 1024
+const VALIDATION_DEFAULT_STATUS: ValidationStatus = 'pending'
+
+function estimateBytes(value: string): number {
+  return new Blob([value]).size
+}
+
+function ensureStorageWithinLimit(
+  targetKey: string,
+  nextRawValue: string,
+): void {
+  const personnelKeys = Object.values(STORAGE_KEYS)
+
+  const totalBytes = personnelKeys.reduce((acc, key) => {
+    const source =
+      key === targetKey ? nextRawValue : localStorage.getItem(key) || ''
+    return acc + estimateBytes(source)
+  }, 0)
+
+  if (totalBytes > APPROX_LOCALSTORAGE_LIMIT_BYTES) {
+    throw new Error(
+      'Não foi possível salvar a evidência. O armazenamento local está próximo do limite de 5MB.',
+    )
+  }
+}
+
+function normalizeValidationStatus(
+  status?: ValidationStatus,
+): ValidationStatus {
+  return status || VALIDATION_DEFAULT_STATUS
+}
+
+function normalizeAttachment(attachment?: Attachment): Attachment | undefined {
+  if (!attachment) return undefined
+
+  return {
+    fileName: attachment.fileName,
+    fileType: attachment.fileType,
+    base64: attachment.base64,
+    size: attachment.size,
+  }
+}
+
+function validateAttachment(attachment?: Attachment): void {
+  if (!attachment) return
+
+  if (attachment.size > MAX_ATTACHMENT_SIZE_BYTES) {
+    throw new Error(
+      'Arquivo excede o limite de 300KB. Faça upload de um arquivo menor.',
+    )
+  }
+}
+
+export function convertFileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('Falha ao converter o arquivo para Base64.'))
+        return
+      }
+      resolve(reader.result)
+    }
+    reader.onerror = () => reject(new Error('Falha ao ler o arquivo anexado.'))
+    reader.readAsDataURL(file)
+  })
+}
 export const PERSONNEL_COMPLIANCE_UPDATED_EVENT = 'personnel-compliance:updated'
 
 function addDays(baseDate: Date, days: number): string {
@@ -45,7 +116,9 @@ function readArraySync<T>(key: string): T[] {
 }
 
 function writeArraySync<T>(key: string, values: T[]): void {
-  localStorage.setItem(key, JSON.stringify(values))
+  const raw = JSON.stringify(values)
+  ensureStorageWithinLimit(key, raw)
+  localStorage.setItem(key, raw)
 }
 
 function evaluateDateStatus(date?: string): ComplianceStatus {
@@ -184,7 +257,7 @@ export async function ensureSeedData(): Promise<void> {
 
   const [marina, joao, paulo, luciana, renata, eduardo] = employees
 
-  const documents: DocumentRecord[] = [
+  const documentsSeed: Omit<DocumentRecord, 'validationStatus'>[] = [
     {
       id: crypto.randomUUID(),
       employeeId: marina.id,
@@ -250,7 +323,7 @@ export async function ensureSeedData(): Promise<void> {
     },
   ]
 
-  const trainings: TrainingRecord[] = [
+  const trainingsSeed: Omit<TrainingRecord, 'validationStatus'>[] = [
     {
       id: crypto.randomUUID(),
       employeeId: marina.id,
@@ -365,7 +438,7 @@ export async function ensureSeedData(): Promise<void> {
     },
   ]
 
-  const vaccines: VaccineRecord[] = [
+  const vaccinesSeed: Omit<VaccineRecord, 'validationStatus'>[] = [
     {
       id: crypto.randomUUID(),
       employeeId: marina.id,
@@ -511,9 +584,27 @@ export async function ensureSeedData(): Promise<void> {
   ]
 
   writeArraySync(STORAGE_KEYS.employees, employees)
-  writeArraySync(STORAGE_KEYS.documents, documents)
-  writeArraySync(STORAGE_KEYS.trainings, trainings)
-  writeArraySync(STORAGE_KEYS.vaccines, vaccines)
+  writeArraySync(
+    STORAGE_KEYS.documents,
+    documentsSeed.map((record) => ({
+      ...record,
+      validationStatus: VALIDATION_DEFAULT_STATUS,
+    })),
+  )
+  writeArraySync(
+    STORAGE_KEYS.trainings,
+    trainingsSeed.map((record) => ({
+      ...record,
+      validationStatus: VALIDATION_DEFAULT_STATUS,
+    })),
+  )
+  writeArraySync(
+    STORAGE_KEYS.vaccines,
+    vaccinesSeed.map((record) => ({
+      ...record,
+      validationStatus: VALIDATION_DEFAULT_STATUS,
+    })),
+  )
   localStorage.setItem(PERSONNEL_SEED_MARKER_KEY, 'true')
 }
 
@@ -524,7 +615,13 @@ async function getEmployeesBase(): Promise<EmployeeBase[]> {
 
 async function getDocuments(): Promise<DocumentRecord[]> {
   await ensureSeedData()
-  return readArraySync<DocumentRecord>(STORAGE_KEYS.documents)
+  return readArraySync<DocumentRecord>(STORAGE_KEYS.documents).map(
+    (record) => ({
+      ...record,
+      attachment: normalizeAttachment(record.attachment),
+      validationStatus: normalizeValidationStatus(record.validationStatus),
+    }),
+  )
 }
 
 export async function getAllTrainingRecords(): Promise<TrainingRecord[]> {
@@ -533,13 +630,19 @@ export async function getAllTrainingRecords(): Promise<TrainingRecord[]> {
     (record) => ({
       ...record,
       status: evaluateDateStatus(record.validUntil),
+      attachment: normalizeAttachment(record.attachment),
+      validationStatus: normalizeValidationStatus(record.validationStatus),
     }),
   )
 }
 
 export async function getAllVaccineRecords(): Promise<VaccineRecord[]> {
   await ensureSeedData()
-  return readArraySync<VaccineRecord>(STORAGE_KEYS.vaccines)
+  return readArraySync<VaccineRecord>(STORAGE_KEYS.vaccines).map((record) => ({
+    ...record,
+    attachment: normalizeAttachment(record.attachment),
+    validationStatus: normalizeValidationStatus(record.validationStatus),
+  }))
 }
 
 export async function getEmployees(): Promise<Employee[]> {
@@ -601,6 +704,7 @@ export async function createEmployee(input: Employee): Promise<Employee> {
       docType: document.type,
       issueDate: document.issueDate,
       expirationDate: document.expiryDate,
+      validationStatus: VALIDATION_DEFAULT_STATUS,
     }),
   )
 
@@ -612,6 +716,7 @@ export async function createEmployee(input: Employee): Promise<Employee> {
       dateCompleted: training.completionDate,
       validUntil: training.expiryDate,
       status: evaluateDateStatus(training.expiryDate),
+      validationStatus: VALIDATION_DEFAULT_STATUS,
     }),
   )
 
@@ -622,6 +727,7 @@ export async function createEmployee(input: Employee): Promise<Employee> {
     doseInfo: 'Registro manual',
     dateAdministered: vaccine.applicationDate,
     nextDueDate: vaccine.expiryDate,
+    validationStatus: VALIDATION_DEFAULT_STATUS,
   }))
 
   writeArraySync(STORAGE_KEYS.documents, [
@@ -705,7 +811,13 @@ export async function registerVaccine(
   input: Omit<VaccineRecord, 'id'>,
 ): Promise<VaccineRecord> {
   const records = await getAllVaccineRecords()
-  const created: VaccineRecord = { ...input, id: crypto.randomUUID() }
+  validateAttachment(input.attachment)
+  const created: VaccineRecord = {
+    ...input,
+    id: crypto.randomUUID(),
+    attachment: normalizeAttachment(input.attachment),
+    validationStatus: normalizeValidationStatus(input.validationStatus),
+  }
   writeArraySync(STORAGE_KEYS.vaccines, [...records, created])
   notifyUpdated()
   return created
@@ -720,11 +832,15 @@ export async function updateVaccine(
 
   if (!current) return null
 
+  validateAttachment(input.attachment)
+
   const updated: VaccineRecord = {
     ...current,
     ...input,
     id,
     employeeId: current.employeeId,
+    attachment: normalizeAttachment(input.attachment),
+    validationStatus: normalizeValidationStatus(input.validationStatus),
   }
 
   writeArraySync(
@@ -750,10 +866,13 @@ export async function registerTraining(
   input: Omit<TrainingRecord, 'id' | 'status'>,
 ): Promise<TrainingRecord> {
   const records = await getAllTrainingRecords()
+  validateAttachment(input.attachment)
   const created: TrainingRecord = {
     ...input,
     id: crypto.randomUUID(),
     status: evaluateDateStatus(input.validUntil),
+    attachment: normalizeAttachment(input.attachment),
+    validationStatus: normalizeValidationStatus(input.validationStatus),
   }
 
   writeArraySync(STORAGE_KEYS.trainings, [...records, created])
@@ -770,12 +889,16 @@ export async function updateTraining(
 
   if (!current) return null
 
+  validateAttachment(input.attachment)
+
   const updated: TrainingRecord = {
     ...current,
     ...input,
     id,
     employeeId: current.employeeId,
     status: evaluateDateStatus(input.validUntil),
+    attachment: normalizeAttachment(input.attachment),
+    validationStatus: normalizeValidationStatus(input.validationStatus),
   }
 
   writeArraySync(
@@ -801,7 +924,13 @@ export async function registerDocument(
   input: Omit<DocumentRecord, 'id'>,
 ): Promise<DocumentRecord> {
   const records = await getDocuments()
-  const created: DocumentRecord = { ...input, id: crypto.randomUUID() }
+  validateAttachment(input.attachment)
+  const created: DocumentRecord = {
+    ...input,
+    id: crypto.randomUUID(),
+    attachment: normalizeAttachment(input.attachment),
+    validationStatus: normalizeValidationStatus(input.validationStatus),
+  }
   writeArraySync(STORAGE_KEYS.documents, [...records, created])
   notifyUpdated()
   return created
@@ -816,11 +945,15 @@ export async function updateDocument(
 
   if (!current) return null
 
+  validateAttachment(input.attachment)
+
   const updated: DocumentRecord = {
     ...current,
     ...input,
     id,
     employeeId: current.employeeId,
+    attachment: normalizeAttachment(input.attachment),
+    validationStatus: normalizeValidationStatus(input.validationStatus),
   }
 
   writeArraySync(

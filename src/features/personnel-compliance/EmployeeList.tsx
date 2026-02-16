@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Paperclip, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { PROJECT_CARDS } from '../site-inspection-report/constants'
 import {
@@ -177,6 +177,7 @@ export function EmployeeList() {
               <th className="px-2 py-2">Cargo</th>
               <th className="px-2 py-2">Obra</th>
               <th className="px-2 py-2">Status</th>
+              <th className="px-2 py-2">Evidências</th>
               <th className="px-2 py-2">Pendências</th>
               <th className="px-2 py-2 text-right">Ações</th>
             </tr>
@@ -208,6 +209,19 @@ export function EmployeeList() {
                     >
                       {COMPLIANCE_STATUS_LABELS[row.status]}
                     </span>
+                  </td>
+                  <td className="px-2 py-3">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        navigateTo(getPersonnelDetailsPath(row.employee.id))
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
+                      <Paperclip size={12} />
+                      Ver anexos
+                    </button>
                   </td>
                   <td className="px-2 py-3 text-gray-700 dark:text-gray-300">
                     {highlights.length
