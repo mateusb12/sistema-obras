@@ -13,6 +13,7 @@ import { AdminPanel, EngineeringPanel } from './pages/RolePanels'
 import { useAuth } from './auth/useAuth'
 import { InspectionPage } from './features/site-inspection-report'
 import { HistoryPage } from './features/inspection-history'
+import { ExecutiveDashboardPage } from './features/executive-dashboard'
 import {
   ConsumptionLogPage,
   InventoryDashboard,
@@ -75,7 +76,7 @@ function App() {
       return (
         <PrivateRoute>
           <FullLayout>
-            <h1>Hello World</h1>
+            <ExecutiveDashboardPage />
           </FullLayout>
         </PrivateRoute>
       )
