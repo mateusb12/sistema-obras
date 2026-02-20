@@ -5,7 +5,6 @@ import casasManagerLogo from '../assets/casasmanager.png'
 import { useAuth } from '../auth/useAuth'
 import {
   APP_ROUTES,
-  getCurrentRoutePath,
   getPersonnelDetailsPath,
   getRouteParam,
   navigateTo,
@@ -19,6 +18,7 @@ import {
 
 type FullLayoutProps = {
   children?: ReactNode
+  currentRoute: string
 }
 
 type NavItem = { label: string; route: AppRoute }
@@ -89,10 +89,9 @@ function getExpandedModulesState(pathname: string): Record<string, boolean> {
   )
 }
 
-export function FullLayout({ children }: FullLayoutProps) {
+export function FullLayout({ children, currentRoute }: FullLayoutProps) {
   const { isDark, toggleDarkMode } = useDarkMode()
   const { logout, user } = useAuth()
-  const [pathname, setPathname] = useState(getCurrentRoutePath())
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH)
   const [activeEmployeeNav, setActiveEmployeeNav] =
@@ -100,33 +99,19 @@ export function FullLayout({ children }: FullLayoutProps) {
   const [isEmployeeSubmenuOpen, setIsEmployeeSubmenuOpen] = useState(true)
   const [expandedModules, setExpandedModules] = useState<
     Record<string, boolean>
-  >(() =>
-    Object.fromEntries(
-      NAV_MODULES.map((module) => [module.label, module.label === 'Inspeção']),
-    ),
-  )
+  >(() => getExpandedModulesState(currentRoute))
 
   useEffect(() => {
-    const onPathChange = () => {
-      const currentPath = getCurrentRoutePath()
-      setPathname(currentPath)
-      setExpandedModules((previous) => ({
-        ...previous,
-        ...getExpandedModulesState(currentPath),
-      }))
-      setIsSidebarOpen(false)
-    }
-
-    window.addEventListener('hashchange', onPathChange)
-
-    return () => {
-      window.removeEventListener('hashchange', onPathChange)
-    }
-  }, [])
+    setExpandedModules((previous) => ({
+      ...previous,
+      ...getExpandedModulesState(currentRoute),
+    }))
+    setIsSidebarOpen(false)
+  }, [currentRoute])
 
   useEffect(() => {
     const activeEmployeeId = getRouteParam(
-      pathname,
+      currentRoute,
       APP_ROUTES.PERSONNEL_DETAILS,
     )
 
@@ -149,12 +134,12 @@ export function FullLayout({ children }: FullLayoutProps) {
     return () => {
       window.clearTimeout(timer)
     }
-  }, [pathname])
+  }, [currentRoute])
 
   useEffect(() => {
     const reload = () => {
       const activeEmployeeId = getRouteParam(
-        pathname,
+        currentRoute,
         APP_ROUTES.PERSONNEL_DETAILS,
       )
       if (!activeEmployeeId) return
@@ -174,7 +159,7 @@ export function FullLayout({ children }: FullLayoutProps) {
     return () => {
       window.removeEventListener(PERSONNEL_COMPLIANCE_UPDATED_EVENT, reload)
     }
-  }, [pathname])
+  }, [currentRoute])
 
   const handleLogout = () => {
     logout()
@@ -299,7 +284,7 @@ export function FullLayout({ children }: FullLayoutProps) {
                 {isExpanded && (
                   <div className="mt-2 space-y-2">
                     {module.items.map((item) => {
-                      const isActive = pathname === item.route
+                      const isActive = currentRoute === item.route
                       const isEmployeeBaseItem =
                         item.route === APP_ROUTES.PERSONNEL_LIST &&
                         module.label === 'Pessoas & Compliance'
@@ -307,7 +292,7 @@ export function FullLayout({ children }: FullLayoutProps) {
                         ? getPersonnelDetailsPath(activeEmployeeNav.id)
                         : ''
                       const isEmployeeDetailActive =
-                        Boolean(detailPath) && pathname === detailPath
+                        Boolean(detailPath) && currentRoute === detailPath
 
                       if (isEmployeeBaseItem) {
                         return (

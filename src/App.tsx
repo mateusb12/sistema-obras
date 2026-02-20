@@ -55,7 +55,7 @@ function App() {
     if (pathname === APP_ROUTES.ADMIN) {
       return (
         <PrivateRoute allowedRoles={[ROLES.ADMIN]}>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <AdminPanel />
           </FullLayout>
         </PrivateRoute>
@@ -65,7 +65,7 @@ function App() {
     if (pathname === APP_ROUTES.ENGINEERING) {
       return (
         <PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.ENGINEER]}>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <EngineeringPanel />
           </FullLayout>
         </PrivateRoute>
@@ -75,7 +75,7 @@ function App() {
     if (pathname === APP_ROUTES.DASHBOARD) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <ExecutiveDashboardPage />
           </FullLayout>
         </PrivateRoute>
@@ -85,7 +85,7 @@ function App() {
     if (pathname === APP_ROUTES.INSPECTION) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <InspectionPage />
           </FullLayout>
         </PrivateRoute>
@@ -95,7 +95,7 @@ function App() {
     if (pathname === APP_ROUTES.HISTORY) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <HistoryPage />
           </FullLayout>
         </PrivateRoute>
@@ -105,7 +105,7 @@ function App() {
     if (pathname === APP_ROUTES.INVENTORY_DASHBOARD) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <InventoryDashboard />
           </FullLayout>
         </PrivateRoute>
@@ -115,7 +115,7 @@ function App() {
     if (pathname === APP_ROUTES.INVENTORY_REGISTRY) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <MaterialRegistry />
           </FullLayout>
         </PrivateRoute>
@@ -125,7 +125,7 @@ function App() {
     if (pathname === APP_ROUTES.INVENTORY_LOGS) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <ConsumptionLogPage />
           </FullLayout>
         </PrivateRoute>
@@ -135,7 +135,7 @@ function App() {
     if (pathname === APP_ROUTES.PERSONNEL_DASHBOARD) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <ComplianceDashboard />
           </FullLayout>
         </PrivateRoute>
@@ -146,7 +146,7 @@ function App() {
     if (employeeId) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <EmployeeDetails employeeId={employeeId} />
           </FullLayout>
         </PrivateRoute>
@@ -156,7 +156,7 @@ function App() {
     if (pathname === APP_ROUTES.PERSONNEL_LIST) {
       return (
         <PrivateRoute>
-          <FullLayout>
+          <FullLayout currentRoute={pathname}>
             <EmployeeList />
           </FullLayout>
         </PrivateRoute>
