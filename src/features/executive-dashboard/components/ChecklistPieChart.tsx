@@ -18,10 +18,8 @@ export function ChecklistPieChart({
     { name: 'Não Conforme', value: fail },
   ]
 
-  const handleSliceClick = (payload: any, index: number) => {
-    const clickedName = data[index].name
-
-    if (clickedName === 'Não Conforme') {
+  const handleSliceClick = (_: any, index: number) => {
+    if (data[index].name === 'Não Conforme') {
       onFailClick?.()
     }
   }
@@ -35,9 +33,18 @@ export function ChecklistPieChart({
           dataKey="value"
           paddingAngle={2}
           onClick={(data, index) => handleSliceClick(data, index)}
+          className="cursor-pointer"
         >
           {data.map((_, i) => (
-            <Cell key={i} fill={COLORS[i]} />
+            <Cell
+              key={i}
+              fill={COLORS[i]}
+              className={
+                i === 1
+                  ? 'hover:brightness-110 transition-all cursor-pointer'
+                  : ''
+              }
+            />
           ))}
         </Pie>
 
