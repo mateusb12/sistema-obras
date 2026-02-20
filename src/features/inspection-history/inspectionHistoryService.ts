@@ -1,5 +1,6 @@
 import type { InspectionForm } from '../site-inspection-report/types'
 import type { InspectionHistoryEntry, InspectionStatus } from './types'
+import { CHECKLIST_ESTRUTURAL } from '../site-inspection-report/constants.ts'
 
 const INSPECTION_STORAGE_KEY = 'cm.site-inspections'
 const ACTIVE_DRAFT_STORAGE_KEY = 'cm.site-inspections.active-draft'
@@ -9,6 +10,71 @@ type UpsertInspectionInput = {
   form: InspectionForm
   createdBy: string
   status: InspectionStatus
+}
+
+const SAMPLE_INSPECTION: InspectionHistoryEntry = {
+  id: crypto.randomUUID(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  createdBy: 'Sistema',
+  status: 'FINISHED',
+
+  data: {
+    header: {
+      title: 'Inspeção Modelo — 102B',
+      projectName: 'Flamboyant II',
+      location: '102B',
+      date: '2026-02-01',
+      inspectorName: 'Eng. João Silva',
+    },
+
+    team: [
+      { id: crypto.randomUUID(), name: 'Rafael Bruno', role: 'Pedreiro' },
+      { id: crypto.randomUUID(), name: 'Elieldo', role: 'Servente' },
+    ],
+
+    checklist: CHECKLIST_ESTRUTURAL.map((item, index) => {
+      let status: 'pass' | 'fail' | 'na' = 'pass'
+      let failReason = ''
+      let failResolution: 'non_conform' | 'needs_correction' | null = null
+
+      if (item.description.includes('prumo')) {
+        status = 'fail'
+        failReason = 'Desvio acima de 12 mm'
+        failResolution = 'needs_correction'
+      }
+
+      if (item.description.includes('esquadrias')) {
+        status = 'fail'
+        failReason = 'Abertura fora da tolerância (+3 cm além do projeto)'
+        failResolution = 'needs_correction'
+      }
+
+      if (item.description.includes('juntas horizontais')) {
+        status = 'fail'
+        failReason = 'Variação de 6 mm detectada'
+        failResolution = 'non_conform'
+      }
+
+      return {
+        id: crypto.randomUUID(),
+        category: item.category,
+        description: item.description,
+        acceptanceCriteria: item.acceptanceCriteria,
+        sampling: item.sampling,
+        inspectionMethod: item.inspectionMethod,
+        status,
+        failReason,
+        failResolution,
+      }
+    }),
+
+    observations:
+      'Inspeção exemplo gerada automaticamente para demonstração. O conteúdo simula condições reais de obra.',
+  },
+
+  searchIndex:
+    'inspeção modelo flamboyant 102b realista obra sistema inspeção digital',
 }
 
 function buildSearchIndex(form: InspectionForm): string {
@@ -58,18 +124,21 @@ function readInspections(): InspectionHistoryEntry[] {
   const raw = localStorage.getItem(INSPECTION_STORAGE_KEY)
 
   if (!raw) {
-    return []
+    writeInspections([SAMPLE_INSPECTION])
+    return [SAMPLE_INSPECTION]
   }
 
   try {
     const parsed = JSON.parse(raw) as Partial<InspectionHistoryEntry>[]
-    if (!Array.isArray(parsed)) {
-      return []
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      writeInspections([SAMPLE_INSPECTION])
+      return [SAMPLE_INSPECTION]
     }
 
     return parsed.map(normalizeEntry)
   } catch {
-    return []
+    writeInspections([SAMPLE_INSPECTION])
+    return [SAMPLE_INSPECTION]
   }
 }
 
