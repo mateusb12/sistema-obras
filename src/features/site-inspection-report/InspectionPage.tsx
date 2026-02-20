@@ -14,6 +14,8 @@ import { CHECKLIST_ESTRUTURAL, CHECKLIST_NAO_ESTRUTURAL } from './constants.ts'
 
 function getDefaultValues(): InspectionFormType {
   return {
+    inspectionType: 'estrutural',
+
     header: {
       title: 'Inspeção 104-B',
       projectName: 'Flamboyant II',
@@ -131,6 +133,7 @@ export function InspectionPage() {
 
   const handleChecklistTypeChange = (type: string) => {
     setChecklistType(type)
+    setValue('inspectionType', type as 'estrutural' | 'nao_estrutural')
     loadChecklist(type)
   }
 
