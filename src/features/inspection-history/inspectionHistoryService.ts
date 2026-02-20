@@ -5,11 +5,33 @@ import { CHECKLIST_ESTRUTURAL } from '../site-inspection-report/constants.ts'
 const INSPECTION_STORAGE_KEY = 'cm.site-inspections'
 const ACTIVE_DRAFT_STORAGE_KEY = 'cm.site-inspections.active-draft'
 
-type UpsertInspectionInput = {
-  id?: string
-  form: InspectionForm
-  createdBy: string
-  status: InspectionStatus
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function randomStatus(): 'pass' | 'fail' | 'na' {
+  const r = Math.random()
+  if (r < 0.7) return 'pass'
+  if (r < 0.9) return 'fail'
+  return 'na'
+}
+
+function randomFailReason(): string {
+  const REASONS = [
+    'Dimensão fora da tolerância',
+    'Variação acima do permitido',
+    'Falha de execução detectada',
+    'Material inadequado',
+    'Acabamento irregular',
+    'Alinhamento incorreto',
+    'Desvios acumulados acima do limite',
+    'Execução fora do projeto',
+  ]
+  return pickRandom(REASONS)
+}
+
+function randomResolution(): 'non_conform' | 'needs_correction' {
+  return pickRandom(['non_conform', 'needs_correction'])
 }
 
 const SAMPLE_INSPECTION: InspectionHistoryEntry = {
@@ -33,29 +55,8 @@ const SAMPLE_INSPECTION: InspectionHistoryEntry = {
       { id: crypto.randomUUID(), name: 'Elieldo', role: 'Servente' },
     ],
 
-    checklist: CHECKLIST_ESTRUTURAL.map((item, index) => {
-      let status: 'pass' | 'fail' | 'na' = 'pass'
-      let failReason = ''
-      let failResolution: 'non_conform' | 'needs_correction' | null = null
-
-      if (item.description.includes('prumo')) {
-        status = 'fail'
-        failReason = 'Desvio acima de 12 mm'
-        failResolution = 'needs_correction'
-      }
-
-      if (item.description.includes('esquadrias')) {
-        status = 'fail'
-        failReason = 'Abertura fora da tolerância (+3 cm além do projeto)'
-        failResolution = 'needs_correction'
-      }
-
-      if (item.description.includes('juntas horizontais')) {
-        status = 'fail'
-        failReason = 'Variação de 6 mm detectada'
-        failResolution = 'non_conform'
-      }
-
+    checklist: CHECKLIST_ESTRUTURAL.map((item) => {
+      const status = randomStatus()
       return {
         id: crypto.randomUUID(),
         category: item.category,
@@ -64,17 +65,16 @@ const SAMPLE_INSPECTION: InspectionHistoryEntry = {
         sampling: item.sampling,
         inspectionMethod: item.inspectionMethod,
         status,
-        failReason,
-        failResolution,
+        failReason: status === 'fail' ? randomFailReason() : '',
+        failResolution: status === 'fail' ? randomResolution() : null,
       }
     }),
 
-    observations:
-      'Inspeção exemplo gerada automaticamente para demonstração. O conteúdo simula condições reais de obra.',
+    observations: 'Inspeção exemplo gerada automaticamente com dados variados.',
   },
 
   searchIndex:
-    'inspeção modelo flamboyant 102b realista obra sistema inspeção digital',
+    'inspeção modelo flamboyant 102b realista obra sistema inspeção digital mock exemplo',
 }
 
 function buildSearchIndex(form: InspectionForm): string {
@@ -120,30 +120,91 @@ function normalizeEntry(
   }
 }
 
+function buildRandomInspection(): InspectionHistoryEntry {
+  return {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: 'Sistema',
+    status: 'FINISHED',
+
+    data: {
+      header: {
+        title: `Inspeção Mock — Unidade ${Math.floor(Math.random() * 200)}`,
+        projectName: pickRandom([
+          'Flamboyant II',
+          'Jardim Europa',
+          'Alto das Palmeiras',
+        ]),
+        location: pickRandom(['101A', '102B', '204A', 'Hall', 'Escada']),
+        date: '2026-02-01',
+        inspectorName: pickRandom(['Eng. João', 'Eng. Carla', 'Téc. Marcos']),
+      },
+
+      team: [
+        { id: crypto.randomUUID(), name: 'Rafael Bruno', role: 'Pedreiro' },
+        { id: crypto.randomUUID(), name: 'Elieldo', role: 'Servente' },
+      ],
+
+      checklist: CHECKLIST_ESTRUTURAL.map((item) => {
+        const status = randomStatus()
+        return {
+          id: crypto.randomUUID(),
+          category: item.category,
+          description: item.description,
+          acceptanceCriteria: item.acceptanceCriteria,
+          sampling: item.sampling,
+          inspectionMethod: item.inspectionMethod,
+          status,
+          failReason: status === 'fail' ? randomFailReason() : '',
+          failResolution: status === 'fail' ? randomResolution() : null,
+        }
+      }),
+
+      observations: 'Inspeção gerada automaticamente para mock.',
+    },
+
+    searchIndex: 'mock auto gerado',
+  }
+}
+
 function readInspections(): InspectionHistoryEntry[] {
   const raw = localStorage.getItem(INSPECTION_STORAGE_KEY)
 
   if (!raw) {
-    writeInspections([SAMPLE_INSPECTION])
-    return [SAMPLE_INSPECTION]
+    const mocks = Array.from({ length: 12 }).map(() => buildRandomInspection())
+    writeInspections(mocks)
+    return mocks
   }
 
   try {
     const parsed = JSON.parse(raw) as Partial<InspectionHistoryEntry>[]
+
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      writeInspections([SAMPLE_INSPECTION])
-      return [SAMPLE_INSPECTION]
+      const mocks = Array.from({ length: 12 }).map(() =>
+        buildRandomInspection(),
+      )
+      writeInspections(mocks)
+      return mocks
     }
 
     return parsed.map(normalizeEntry)
   } catch {
-    writeInspections([SAMPLE_INSPECTION])
-    return [SAMPLE_INSPECTION]
+    const mocks = Array.from({ length: 12 }).map(() => buildRandomInspection())
+    writeInspections(mocks)
+    return mocks
   }
 }
 
 function writeInspections(inspections: InspectionHistoryEntry[]): void {
   localStorage.setItem(INSPECTION_STORAGE_KEY, JSON.stringify(inspections))
+}
+
+type UpsertInspectionInput = {
+  id?: string
+  form: InspectionForm
+  createdBy: string
+  status: InspectionStatus
 }
 
 export function upsertInspection({
@@ -172,12 +233,7 @@ export function upsertInspection({
     })
 
     writeInspections(updated)
-
-    const found = updated.find((inspection) => inspection.id === id)
-
-    if (found) {
-      return found
-    }
+    return updated.find((i) => i.id === id)!
   }
 
   const savedInspection: InspectionHistoryEntry = {
@@ -191,7 +247,6 @@ export function upsertInspection({
   }
 
   writeInspections([savedInspection, ...inspections])
-
   return savedInspection
 }
 
@@ -205,9 +260,7 @@ export function getInspectionById(id: string): InspectionHistoryEntry | null {
 
 export function renameInspection(id: string, title: string): void {
   const inspections = readInspections().map((inspection) => {
-    if (inspection.id !== id) {
-      return inspection
-    }
+    if (inspection.id !== id) return inspection
 
     const data = {
       ...inspection.data,

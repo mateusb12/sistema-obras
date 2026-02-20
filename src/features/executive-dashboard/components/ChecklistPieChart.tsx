@@ -21,7 +21,13 @@ export function ChecklistPieChart({ success, fail }: ChecklistPieChartProps) {
             <Cell key={i} fill={COLORS[i]} />
           ))}
         </Pie>
-        <Tooltip />
+
+        <Tooltip
+          formatter={(value) => {
+            const num = typeof value === 'number' ? value : Number(value)
+            return `${Math.round(num)}%`
+          }}
+        />
       </PieChart>
     </ResponsiveContainer>
   )
