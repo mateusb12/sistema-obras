@@ -113,11 +113,35 @@ export function DummyLoginPage() {
           <p className="mb-2 font-semibold tracking-wide text-gray-300 uppercase">
             Credenciais de teste
           </p>
+
           {MOCK_USERS.map((mockUser) => (
             <p key={mockUser.id}>
               {mockUser.email} / {mockUser.password} ({mockUser.role})
             </p>
           ))}
+
+          <button
+            onClick={() => {
+              if (!confirm('Deseja realmente RESETAR todos os dados locais?'))
+                return
+
+              localStorage.removeItem('cm.site-inspections')
+              localStorage.removeItem('cm.site-inspections.active-draft')
+              localStorage.removeItem('cm.auth.token')
+
+              window.location.reload()
+            }}
+            className="
+      mt-4 w-full text-center rounded-lg
+      border border-red-500/40 bg-red-900/20
+      text-red-300 py-2
+      hover:bg-red-900/40 hover:border-red-400
+      hover:text-red-200 hover:shadow-[0_0_12px_rgba(255,0,0,0.3)]
+      transition-all duration-300 text-xs font-semibold
+    "
+          >
+            🔥 Limpar cache do navegador (aperte isso para corrigir BUGS)
+          </button>
         </div>
       </div>
     </div>
