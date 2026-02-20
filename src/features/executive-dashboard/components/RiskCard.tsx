@@ -6,6 +6,8 @@ type RiskCardProps = {
   highlightValue: string
   highlightLabel: string
   toneClassName: string
+  isActive: boolean
+  onClick: () => void
   children: ReactNode
 }
 
@@ -15,10 +17,21 @@ export function RiskCard({
   highlightValue,
   highlightLabel,
   toneClassName,
+  isActive,
+  onClick,
   children,
 }: RiskCardProps) {
+  const activeStyles = isActive
+    ? `${toneClassName} ring-2 ring-offset-2 ring-current dark:ring-offset-gray-900 shadow-md scale-[1.02]`
+    : 'border-gray-200 bg-gray-50/50 opacity-60 hover:opacity-100 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/30'
+
   return (
-    <article className={`rounded-2xl border p-5 ${toneClassName}`}>
+    <div
+      role="tab"
+      aria-selected={isActive}
+      onClick={onClick}
+      className={`cursor-pointer rounded-2xl border p-5 text-left transition-all duration-200 ${activeStyles}`}
+    >
       <header>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           {title}
@@ -26,7 +39,9 @@ export function RiskCard({
         <p className="text-sm text-gray-700 dark:text-gray-300">{subtitle}</p>
       </header>
 
-      <div className="mt-5 rounded-xl bg-white/70 p-4 text-center dark:bg-gray-950/30">
+      <div
+        className={`mt-5 rounded-xl p-4 text-center transition-colors ${isActive ? 'bg-white/70 dark:bg-gray-950/30' : 'bg-white/40 dark:bg-gray-800/50'}`}
+      >
         <p className="text-4xl font-bold text-gray-900 dark:text-white">
           {highlightValue}
         </p>
@@ -36,6 +51,6 @@ export function RiskCard({
       </div>
 
       <div className="mt-4 space-y-3">{children}</div>
-    </article>
+    </div>
   )
 }
