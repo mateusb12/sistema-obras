@@ -150,7 +150,7 @@ export function ExecutiveDashboardPage() {
 
       <hr className="my-8 border-t border-gray-200 dark:border-gray-800" />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4">
         {activeTab === 'geral' && (
           <article className="lg:col-span-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-700/70 dark:bg-indigo-900/20">
             <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100">
@@ -232,7 +232,7 @@ export function ExecutiveDashboardPage() {
         )}
 
         {activeTab === 'conformidade_itens' && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {checklistStats.map((item) => (
               <div
                 key={item.description}
