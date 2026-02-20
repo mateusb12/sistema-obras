@@ -1,14 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import { ROLES } from '../../auth/types'
-import { getExecutiveDashboardData } from './executiveDashboardService'
+import {
+  getChecklistStats,
+  getExecutiveDashboardData,
+} from './executiveDashboardService'
 import type { ExecutiveDashboardData } from './types'
-import { RiskCard } from './components/RiskCard'
-import { RiskScoreCard } from './components/RiskScoreCard'
 import { TopIssuesTable } from './components/TopIssuesTable'
 import { TrendChart } from './components/TrendChart'
-import { TabButton } from './components/TabButton.tsx'
-import { BarChart2, Package, Repeat2, ShieldCheck } from 'lucide-react'
+import {
+  BarChart2,
+  PieChart,
+  Package,
+  Repeat2,
+  ShieldCheck,
+} from 'lucide-react'
+import { DashboardMainCard } from './components/DashboardMainCard.tsx'
+import { ChecklistPieChart } from './components/ChecklistPieChart.tsx'
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
@@ -51,18 +59,27 @@ function emptyDashboard(): ExecutiveDashboardData {
   }
 }
 
-type TabId = 'geral' | 'retrabalho' | 'desperdicio' | 'compliance'
+type TabId =
+  | 'geral'
+  | 'retrabalho'
+  | 'desperdicio'
+  | 'compliance'
+  | 'conformidade_itens'
 
 export function ExecutiveDashboardPage() {
   const { user } = useAuth()
   const [data, setData] = useState<ExecutiveDashboardData>(emptyDashboard)
   const [activeTab, setActiveTab] = useState<TabId>('geral')
+  const [checklistStats, setChecklistStats] = useState<any[]>([])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void getExecutiveDashboardData().then((savedData) => {
         setData(savedData)
       })
+
+      const stats = getChecklistStats()
+      setChecklistStats(stats)
     }, 0)
 
     return () => {
@@ -89,31 +106,43 @@ export function ExecutiveDashboardPage() {
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-3 mb-6" role="tablist">
-        <TabButton
-          label="Geral"
-          icon={<BarChart2 size={18} />}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <DashboardMainCard
+          title="Geral"
+          value={`${data.riscoGeral.score} pts`}
+          icon={<BarChart2 size={28} />}
           isActive={activeTab === 'geral'}
           onClick={() => setActiveTab('geral')}
         />
 
-        <TabButton
-          label="Retrabalho"
-          icon={<Repeat2 size={18} />}
+        <DashboardMainCard
+          title="Conformidade"
+          value="Por item"
+          icon={<PieChart size={28} />}
+          isActive={activeTab === 'conformidade_itens'}
+          onClick={() => setActiveTab('conformidade_itens')}
+        />
+
+        <DashboardMainCard
+          title="Retrabalho"
+          value={formatPercent(data.retrabalho.taxaReprovacao)}
+          icon={<Repeat2 size={28} />}
           isActive={activeTab === 'retrabalho'}
           onClick={() => setActiveTab('retrabalho')}
         />
 
-        <TabButton
-          label="Desperdício"
-          icon={<Package size={18} />}
+        <DashboardMainCard
+          title="Desperdício"
+          value={formatPercent(data.desperdicio.desvioPercentual)}
+          icon={<Package size={28} />}
           isActive={activeTab === 'desperdicio'}
           onClick={() => setActiveTab('desperdicio')}
         />
 
-        <TabButton
-          label="Compliance"
-          icon={<ShieldCheck size={18} />}
+        <DashboardMainCard
+          title="Compliance"
+          value={`${data.compliance.indiceConformidade}`}
+          icon={<ShieldCheck size={28} />}
           isActive={activeTab === 'compliance'}
           onClick={() => setActiveTab('compliance')}
         />
@@ -200,6 +229,34 @@ export function ExecutiveDashboardPage() {
               vencidos.
             </p>
           </article>
+        )}
+
+        {activeTab === 'conformidade_itens' && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {checklistStats.map((item) => (
+              <div
+                key={item.description}
+                className="rounded-2xl border border-gray-700 bg-gray-900/30 p-4"
+              >
+                <h3 className="text-base font-semibold text-white">
+                  {item.description}
+                </h3>
+
+                <p className="text-sm text-gray-400 mb-2">
+                  Categoria: {item.category}
+                </p>
+
+                <ChecklistPieChart
+                  success={item.successPct}
+                  fail={item.failPct}
+                />
+
+                <div className="mt-3 text-xs text-gray-400">
+                  Total inspeções: {item.total}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </section>

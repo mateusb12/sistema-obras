@@ -19,6 +19,7 @@
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
     "react-pdf": "^10.3.0",
+    "recharts": "^3.7.0",
     "repomix": "^1.11.1"
   },
   "devDependencies": {

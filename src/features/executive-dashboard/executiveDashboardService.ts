@@ -10,6 +10,7 @@ import type {
   ComplianceRiskData,
   RiscoClassificacao,
 } from './types'
+import { getSavedInspections } from '../inspection-history'
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
@@ -71,5 +72,52 @@ export async function getExecutiveDashboardData(): Promise<ExecutiveDashboardDat
       baseData.desperdicio,
       baseData.compliance,
     ),
+  })
+}
+
+export function getChecklistStats() {
+  const inspections = getSavedInspections()
+
+  const stats: Record<
+    string,
+    {
+      category: string
+      description: string
+      total: number
+      pass: number
+      fail: number
+    }
+  > = {}
+
+  for (const insp of inspections) {
+    for (const item of insp.data.checklist) {
+      const key = item.description
+
+      if (!stats[key]) {
+        stats[key] = {
+          category: item.category,
+          description: item.description,
+          total: 0,
+          pass: 0,
+          fail: 0,
+        }
+      }
+
+      stats[key].total++
+
+      if (item.status === 'pass') stats[key].pass++
+      if (item.status === 'fail') stats[key].fail++
+    }
+  }
+
+  return Object.values(stats).map((item) => {
+    const successPct = (item.pass / item.total) * 100
+    const failPct = (item.fail / item.total) * 100
+
+    return {
+      ...item,
+      successPct,
+      failPct,
+    }
   })
 }
