@@ -10,75 +10,7 @@ import {
 import { InspectionForm } from './InspectionForm'
 import { PDFPreview } from './PDFPreview'
 import type { InspectionForm as InspectionFormType } from './types'
-
-const STANDARD_CHECKLIST = [
-  {
-    category: 'Alvenaria',
-    description: 'Locação e assentamento dos blocos chaves e da 1ª fiada',
-    acceptanceCriteria:
-      'Estar com dimensões de acordo com o projeto e igual ao previsto pelo calculista',
-    sampling: '100%',
-    inspectionMethod: 'Uso de trena e projeto',
-  },
-  {
-    category: 'Alvenaria',
-    description: 'Locação das janelas e esquadrias de alumínio',
-    acceptanceCriteria: 'De acordo com o projeto +5,00 cm',
-    sampling: '100%',
-    inspectionMethod: 'Trena metálica',
-  },
-  {
-    category: 'Alvenaria',
-    description: 'Abertura dos vãos das portas de madeira',
-    acceptanceCriteria: 'De acordo com o projeto +8,00 cm',
-    sampling: '100%',
-    inspectionMethod: 'Trena metálica',
-  },
-  {
-    category: 'Alvenaria',
-    description: 'Medida das "bonecas"',
-    acceptanceCriteria: 'Conforme modulação definida em projeto executivo',
-    sampling: '100%',
-    inspectionMethod: 'Trena e conferência em projeto',
-  },
-  {
-    category: 'Alvenaria',
-    description: 'Prumo (Tolerância 10mm)',
-    acceptanceCriteria: 'Desvio máximo de 10 mm por pano inspecionado',
-    sampling: '100%',
-    inspectionMethod: 'Prumo de face',
-  },
-  {
-    category: 'Alvenaria',
-    description: 'Esquadro (Checar 3:4:5 ou metálico)',
-    acceptanceCriteria: 'Checar esquadro (3:4:5) ou esquadro metálico ±10 mm',
-    sampling: '100%',
-    inspectionMethod: 'Trena metálica ou esquadro',
-  },
-  {
-    category: 'Alvenaria',
-    description: 'Telas metálicas ou barras de aço (tijolo cerâmico)',
-    acceptanceCriteria: 'Instalação conforme paginação e posição de projeto',
-    sampling: '100%',
-    inspectionMethod: 'Inspeção visual e conferência em projeto',
-  },
-  {
-    category: 'Acabamento',
-    description: 'Verificação de reboco e regularidade',
-    acceptanceCriteria:
-      'Superfície regular, sem destacamentos ou fissuras ativas',
-    sampling: 'Amostral',
-    inspectionMethod: 'Régua de alumínio e inspeção visual',
-  },
-  {
-    category: 'Segurança',
-    description: 'Uso correto de EPIs pela equipe',
-    acceptanceCriteria:
-      'Todos os colaboradores com EPI completo conforme atividade',
-    sampling: '100%',
-    inspectionMethod: 'Check visual em campo',
-  },
-]
+import { CHECKLIST_ESTRUTURAL, CHECKLIST_NAO_ESTRUTURAL } from './constants.ts'
 
 function getDefaultValues(): InspectionFormType {
   return {
@@ -89,9 +21,10 @@ function getDefaultValues(): InspectionFormType {
       date: new Date().toISOString().split('T')[0],
       inspectorName: 'Rafael Bruno',
     },
+
     team: [],
 
-    checklist: STANDARD_CHECKLIST.map((item) => ({
+    checklist: CHECKLIST_ESTRUTURAL.map((item) => ({
       id: crypto.randomUUID(),
       category: item.category,
       description: item.description,
@@ -102,6 +35,7 @@ function getDefaultValues(): InspectionFormType {
       failReason: '',
       failResolution: null,
     })),
+
     observations: '',
   }
 }
@@ -112,7 +46,7 @@ export function InspectionPage() {
   const [editingInspectionId, setEditingInspectionId] = useState<string | null>(
     null,
   )
-
+  const [checklistType, setChecklistType] = useState('estrutural')
   const { register, watch, setValue, reset } = useForm<InspectionFormType>({
     defaultValues: getDefaultValues(),
   })
@@ -175,6 +109,31 @@ export function InspectionPage() {
     window.setTimeout(() => setSaveMessage(''), 3000)
   }
 
+  const loadChecklist = (type: string) => {
+    const base =
+      type === 'estrutural' ? CHECKLIST_ESTRUTURAL : CHECKLIST_NAO_ESTRUTURAL
+
+    setValue(
+      'checklist',
+      base.map((item) => ({
+        id: crypto.randomUUID(),
+        category: item.category,
+        description: item.description,
+        acceptanceCriteria: item.acceptanceCriteria,
+        sampling: item.sampling,
+        inspectionMethod: item.inspectionMethod,
+        status: 'na',
+        failReason: '',
+        failResolution: null,
+      })),
+    )
+  }
+
+  const handleChecklistTypeChange = (type: string) => {
+    setChecklistType(type)
+    loadChecklist(type)
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:h-[calc(100dvh-5.5rem)] lg:overflow-hidden">
       <div className="min-h-0 overflow-y-auto pr-4">
@@ -189,6 +148,8 @@ export function InspectionPage() {
           onSaveDraft={() => persistInspection('DRAFT')}
           onFinish={() => persistInspection('FINISHED')}
           isEditing={Boolean(editingInspectionId)}
+          selectedChecklistType={checklistType}
+          onChecklistTypeChange={handleChecklistTypeChange}
         />
         {saveMessage && (
           <p className="mt-4 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300">

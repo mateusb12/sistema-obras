@@ -42,11 +42,15 @@ interface InspectionFormProps {
   onTeamChange: (team: TeamMember[]) => void
   checklist: ChecklistItem[]
   onChecklistChange: (checklist: ChecklistItem[]) => void
+
   selectedProject: string
   onProjectChange: (projectName: string) => void
   onSaveDraft: () => void
   onFinish: () => void
   isEditing: boolean
+
+  selectedChecklistType: string
+  onChecklistTypeChange: (type: string) => void
 }
 
 export function InspectionForm({
@@ -60,6 +64,8 @@ export function InspectionForm({
   onSaveDraft,
   onFinish,
   isEditing,
+  selectedChecklistType,
+  onChecklistTypeChange,
 }: InspectionFormProps) {
   const [newMember, setNewMember] = useState({ name: '', role: '' })
 
@@ -349,6 +355,23 @@ export function InspectionForm({
             <Plus size={18} /> Adicionar Integrante ao PDF
           </button>
         </div>
+      </div>
+
+      <hr className="border-gray-200 dark:border-gray-700" />
+
+      <div>
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+          Tipo de Alvenaria
+        </label>
+
+        <select
+          className={INPUT_CLASS}
+          value={selectedChecklistType}
+          onChange={(e) => onChecklistTypeChange(e.target.value)}
+        >
+          <option value="estrutural">Alvenaria Estrutural</option>
+          <option value="nao-estrutural">Alvenaria Não Estrutural</option>
+        </select>
       </div>
 
       <hr className="border-gray-200 dark:border-gray-700" />
