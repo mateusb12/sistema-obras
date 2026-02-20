@@ -1,6 +1,9 @@
 import type { InspectionForm } from '../site-inspection-report/types'
 import type { InspectionHistoryEntry, InspectionStatus } from './types'
-import { CHECKLIST_ESTRUTURAL } from '../site-inspection-report/constants.ts'
+import {
+  CHECKLIST_ESTRUTURAL,
+  CHECKLIST_NAO_ESTRUTURAL,
+} from '../site-inspection-report/constants.ts'
 
 const INSPECTION_STORAGE_KEY = 'cm.site-inspections'
 const ACTIVE_DRAFT_STORAGE_KEY = 'cm.site-inspections.active-draft'
@@ -32,49 +35,6 @@ function randomFailReason(): string {
 
 function randomResolution(): 'non_conform' | 'needs_correction' {
   return pickRandom(['non_conform', 'needs_correction'])
-}
-
-const SAMPLE_INSPECTION: InspectionHistoryEntry = {
-  id: crypto.randomUUID(),
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  createdBy: 'Sistema',
-  status: 'FINISHED',
-
-  data: {
-    header: {
-      title: 'Inspeção Modelo — 102B',
-      projectName: 'Flamboyant II',
-      location: '102B',
-      date: '2026-02-01',
-      inspectorName: 'Eng. João Silva',
-    },
-
-    team: [
-      { id: crypto.randomUUID(), name: 'Rafael Bruno', role: 'Pedreiro' },
-      { id: crypto.randomUUID(), name: 'Elieldo', role: 'Servente' },
-    ],
-
-    checklist: CHECKLIST_ESTRUTURAL.map((item) => {
-      const status = randomStatus()
-      return {
-        id: crypto.randomUUID(),
-        category: item.category,
-        description: item.description,
-        acceptanceCriteria: item.acceptanceCriteria,
-        sampling: item.sampling,
-        inspectionMethod: item.inspectionMethod,
-        status,
-        failReason: status === 'fail' ? randomFailReason() : '',
-        failResolution: status === 'fail' ? randomResolution() : null,
-      }
-    }),
-
-    observations: 'Inspeção exemplo gerada automaticamente com dados variados.',
-  },
-
-  searchIndex:
-    'inspeção modelo flamboyant 102b realista obra sistema inspeção digital mock exemplo',
 }
 
 function buildSearchIndex(form: InspectionForm): string {
@@ -121,6 +81,12 @@ function normalizeEntry(
 }
 
 function buildRandomInspection(): InspectionHistoryEntry {
+  const isEstrutural = Math.random() < 0.5
+
+  const checklistSource = isEstrutural
+    ? CHECKLIST_ESTRUTURAL
+    : CHECKLIST_NAO_ESTRUTURAL
+
   return {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
@@ -146,7 +112,9 @@ function buildRandomInspection(): InspectionHistoryEntry {
         { id: crypto.randomUUID(), name: 'Elieldo', role: 'Servente' },
       ],
 
-      checklist: CHECKLIST_ESTRUTURAL.map((item) => {
+      inspectionType: isEstrutural ? 'estrutural' : 'nao_estrutural',
+
+      checklist: checklistSource.map((item) => {
         const status = randomStatus()
         return {
           id: crypto.randomUUID(),

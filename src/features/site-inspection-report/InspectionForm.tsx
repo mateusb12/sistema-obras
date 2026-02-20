@@ -370,8 +370,14 @@ export function InspectionForm({
           onChange={(e) => onChecklistTypeChange(e.target.value)}
         >
           <option value="estrutural">Alvenaria Estrutural</option>
-          <option value="nao-estrutural">Alvenaria Não Estrutural</option>
+          <option value="nao_estrutural">Alvenaria Não Estrutural</option>
         </select>
+
+        <input
+          type="hidden"
+          {...register('inspectionType')}
+          value={selectedChecklistType}
+        />
       </div>
 
       <hr className="border-gray-200 dark:border-gray-700" />

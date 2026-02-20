@@ -29,4 +29,5 @@ export interface InspectionForm {
   team: TeamMember[]
   checklist: ChecklistItem[]
   observations: string
+  inspectionType: 'estrutural' | 'nao_estrutural'
 }

@@ -34,14 +34,8 @@ function calculateDesperdicioScore(data: DesperdicioRiskData): number {
 }
 
 function classifyRisk(score: number): RiscoClassificacao {
-  if (score >= RISK_CLASSIFICATION.Baixo.min) {
-    return 'Baixo'
-  }
-
-  if (score >= RISK_CLASSIFICATION.Médio.min) {
-    return 'Médio'
-  }
-
+  if (score >= RISK_CLASSIFICATION.Baixo.min) return 'Baixo'
+  if (score >= RISK_CLASSIFICATION.Médio.min) return 'Médio'
   return 'Alto'
 }
 
@@ -86,38 +80,41 @@ export function getChecklistStats() {
       total: number
       pass: number
       fail: number
+      typeCounts: { estrutural: number; nao_estrutural: number }
     }
   > = {}
 
   for (const insp of inspections) {
+    const type = insp.data.inspectionType || 'estrutural'
+
     for (const item of insp.data.checklist) {
-      const key = item.description
+      const key = `${type}-${item.description}`
 
       if (!stats[key]) {
+        const labelTipo =
+          type === 'estrutural' ? 'estrutural' : 'não-estrutural'
+
         stats[key] = {
-          category: item.category,
+          category: `${item.category} ${labelTipo}`,
           description: item.description,
           total: 0,
           pass: 0,
           fail: 0,
+          typeCounts: { estrutural: 0, nao_estrutural: 0 },
         }
       }
 
       stats[key].total++
+      stats[key].typeCounts[type]++
 
       if (item.status === 'pass') stats[key].pass++
       if (item.status === 'fail') stats[key].fail++
     }
   }
 
-  return Object.values(stats).map((item) => {
-    const successPct = (item.pass / item.total) * 100
-    const failPct = (item.fail / item.total) * 100
-
-    return {
-      ...item,
-      successPct,
-      failPct,
-    }
-  })
+  return Object.values(stats).map((item) => ({
+    ...item,
+    successPct: (item.pass / item.total) * 100,
+    failPct: (item.fail / item.total) * 100,
+  }))
 }
