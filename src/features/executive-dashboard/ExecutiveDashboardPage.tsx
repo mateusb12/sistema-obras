@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { DashboardMainCard } from './components/DashboardMainCard.tsx'
 import { ChecklistPieChart } from './components/ChecklistPieChart.tsx'
+import { InspectionFailModal } from './components/InspectionFailModal.tsx'
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
@@ -71,6 +72,9 @@ export function ExecutiveDashboardPage() {
   const [data, setData] = useState<ExecutiveDashboardData>(emptyDashboard)
   const [activeTab, setActiveTab] = useState<TabId>('geral')
   const [checklistStats, setChecklistStats] = useState<any[]>([])
+  const [selectedChecklist, setSelectedChecklist] = useState<string | null>(
+    null,
+  )
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -249,6 +253,7 @@ export function ExecutiveDashboardPage() {
                 <ChecklistPieChart
                   success={item.successPct}
                   fail={item.failPct}
+                  onFailClick={() => setSelectedChecklist(item.description)}
                 />
 
                 <div className="mt-3 text-xs text-gray-400">
@@ -257,6 +262,12 @@ export function ExecutiveDashboardPage() {
               </div>
             ))}
           </div>
+        )}
+        {selectedChecklist && (
+          <InspectionFailModal
+            checklistName={selectedChecklist}
+            onClose={() => setSelectedChecklist(null)}
+          />
         )}
       </div>
     </section>
