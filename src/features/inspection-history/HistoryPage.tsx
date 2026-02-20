@@ -13,6 +13,7 @@ import {
   setInspectionInEdition,
 } from './inspectionHistoryService'
 import type { InspectionHistoryEntry } from './types'
+import { InspectionCalendar } from './components/InspectionCalendar.tsx'
 
 function hasNonConformity(inspection: InspectionHistoryEntry): boolean {
   return inspection.data.checklist.some((item) => item.status === 'fail')
@@ -143,6 +144,8 @@ export function HistoryPage() {
           deletar.
         </p>
       </header>
+
+      <InspectionCalendar inspections={filteredInspections} />
 
       <section className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 md:grid-cols-2 lg:grid-cols-6">
         <div>

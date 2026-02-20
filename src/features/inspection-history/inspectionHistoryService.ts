@@ -80,6 +80,21 @@ function normalizeEntry(
   }
 }
 
+function randomDateInCurrentMonth(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  const randomDay = Math.floor(Math.random() * daysInMonth) + 1
+
+  const formattedMonth = String(month + 1).padStart(2, '0')
+  const formattedDay = String(randomDay).padStart(2, '0')
+
+  return `${year}-${formattedMonth}-${formattedDay}`
+}
+
 function buildRandomInspection(): InspectionHistoryEntry {
   const isEstrutural = Math.random() < 0.5
 
@@ -103,7 +118,7 @@ function buildRandomInspection(): InspectionHistoryEntry {
           'Alto das Palmeiras',
         ]),
         location: pickRandom(['101A', '102B', '204A', 'Hall', 'Escada']),
-        date: '2026-02-01',
+        date: randomDateInCurrentMonth(),
         inspectorName: pickRandom(['Eng. João', 'Eng. Carla', 'Téc. Marcos']),
       },
 
