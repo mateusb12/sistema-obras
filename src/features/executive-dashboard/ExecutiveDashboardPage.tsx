@@ -111,7 +111,7 @@ export function ExecutiveDashboardPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <DashboardMainCard
           title="Geral"
           value={`${data.riscoGeral.score} pts`}
@@ -157,7 +157,7 @@ export function ExecutiveDashboardPage() {
 
       <div className="grid gap-4">
         {activeTab === 'geral' && (
-          <article className="lg:col-span-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-700/70 dark:bg-indigo-900/20">
+          <article className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-700/70 dark:bg-indigo-900/20 lg:col-span-2">
             <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100">
               Resumo Estratégico: Custo Invisível Estimado
             </h3>
@@ -225,7 +225,7 @@ export function ExecutiveDashboardPage() {
         )}
 
         {activeTab === 'compliance' && (
-          <article className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-5 text-center dark:border-gray-700 dark:bg-gray-800">
+          <article className="rounded-2xl border border-gray-200 bg-white p-5 text-center dark:border-gray-700 dark:bg-gray-800 lg:col-span-2">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
               Detalhes de Compliance em desenvolvimento
             </h3>
@@ -239,94 +239,98 @@ export function ExecutiveDashboardPage() {
         {activeTab === 'conformidade_itens' && (
           <div className="animate-in fade-in duration-300">
             {!selectedChecklist ? (
-              <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                {checklistStats.map((item) => (
-                  <div
-                    key={item.description}
-                    className="
-    rounded-2xl border border-gray-700 bg-gray-900/30 p-4
-    cursor-pointer
-    transition-all duration-300 ease-out
-    hover:scale-[1.04]
-    hover:border-indigo-400/60
-    hover:shadow-[0_0_25px_rgba(99,102,241,0.45)]
-    hover:bg-gray-900/50
-  "
-                    onClick={() => setSelectedChecklist(item.description)}
-                  >
-                    <h3
-                      className="text-base font-semibold text-white line-clamp-2"
-                      title={item.description}
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+                {checklistStats.map((item) => {
+                  const uniqueId = `${item.category}-${item.description}`
+
+                  return (
+                    <div
+                      key={uniqueId}
+                      className="
+                        cursor-pointer rounded-2xl border
+                        border-gray-700 bg-gray-900/30 p-4
+                        transition-all duration-300
+                        ease-out hover:scale-[1.04]
+                        hover:bg-gray-900/50 hover:border-indigo-400/60
+                        hover:shadow-[0_0_25px_rgba(99,102,241,0.45)]
+                      "
+                      onClick={() => setSelectedChecklist(uniqueId)}
                     >
-                      {item.description}
-                    </h3>
-                    <p className="text-sm text-gray-400 mb-2 truncate">
-                      {item.category}
-                    </p>
+                      <h3
+                        className="line-clamp-2 text-base font-semibold text-white"
+                        title={item.description}
+                      >
+                        {item.description}
+                      </h3>
+                      <p className="mb-2 truncate text-sm text-gray-400">
+                        {item.category}
+                      </p>
 
-                    <ChecklistPieChart
-                      success={item.successPct}
-                      fail={item.failPct}
-                      onFailClick={() => setSelectedChecklist(item.description)}
-                    />
+                      <ChecklistPieChart
+                        success={item.successPct}
+                        fail={item.failPct}
+                        onFailClick={() => setSelectedChecklist(uniqueId)}
+                      />
 
-                    <div className="mt-3 text-xs text-gray-400 text-center border-t border-gray-800 pt-2">
-                      {item.total} inspeções
+                      <div className="mt-3 border-t border-gray-800 pt-2 text-center text-xs text-gray-400">
+                        {item.total} inspeções
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <div className="flex flex-col gap-6">
                 <button
+                  type="button"
                   onClick={() => setSelectedChecklist(null)}
-                  className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors w-fit font-medium"
+                  className="flex w-fit items-center gap-2 font-medium text-indigo-400 transition-colors hover:text-indigo-300"
                 >
                   <ArrowLeft size={20} />
                   Voltar para visão geral
                 </button>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-900/20 p-6 rounded-2xl border border-gray-800">
-                  <div className="lg:col-span-1 flex flex-col items-center justify-center p-6 bg-gray-900/50 rounded-xl border border-gray-700">
-                    {(() => {
-                      const item = checklistStats.find(
-                        (c) => c.description === selectedChecklist,
-                      )
-                      if (!item) return null
+                {(() => {
+                  const item = checklistStats.find(
+                    (c) =>
+                      `${c.category}-${c.description}` === selectedChecklist,
+                  )
 
-                      return (
-                        <>
-                          <h3 className="text-xl font-bold text-white text-center mb-2">
-                            {item.description}
-                          </h3>
-                          <span className="px-3 py-1 bg-gray-800 text-gray-300 text-xs rounded-full mb-6">
-                            Categoria: {item.category}
-                          </span>
+                  if (!item) return null
 
-                          <div className="w-full max-w-[250px]">
-                            <ChecklistPieChart
-                              success={item.successPct}
-                              fail={item.failPct}
-                            />
+                  return (
+                    <div className="grid grid-cols-1 gap-6 rounded-2xl border border-gray-800 bg-gray-900/20 p-6 lg:grid-cols-3">
+                      <div className="flex flex-col items-center justify-center rounded-xl border border-gray-700 bg-gray-900/50 p-6 lg:col-span-1">
+                        <h3 className="mb-2 text-center text-xl font-bold text-white">
+                          {item.description}
+                        </h3>
+                        <span className="mb-6 rounded-full bg-gray-800 px-3 py-1 text-xs text-gray-300">
+                          Categoria: {item.category}
+                        </span>
+
+                        <div className="w-full max-w-[250px]">
+                          <ChecklistPieChart
+                            success={item.successPct}
+                            fail={item.failPct}
+                          />
+                        </div>
+
+                        <div className="mt-6 flex w-full justify-center gap-4 text-sm">
+                          <div className="font-medium text-emerald-400">
+                            Aprovado: {item.pass}
                           </div>
-
-                          <div className="mt-6 flex gap-4 text-sm w-full justify-center">
-                            <div className="text-emerald-400 font-medium">
-                              Aprovado: {item.pass}
-                            </div>
-                            <div className="text-red-400 font-medium">
-                              Falha: {item.fail}
-                            </div>
+                          <div className="font-medium text-red-400">
+                            Falha: {item.fail}
                           </div>
-                        </>
-                      )
-                    })()}
-                  </div>
+                        </div>
+                      </div>
 
-                  <div className="lg:col-span-2">
-                    <InspectionFailList checklistName={selectedChecklist} />
-                  </div>
-                </div>
+                      <div className="lg:col-span-2">
+                        <InspectionFailList checklistName={item.description} />
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )}
           </div>
