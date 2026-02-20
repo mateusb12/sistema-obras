@@ -7,6 +7,8 @@ import { RiskCard } from './components/RiskCard'
 import { RiskScoreCard } from './components/RiskScoreCard'
 import { TopIssuesTable } from './components/TopIssuesTable'
 import { TrendChart } from './components/TrendChart'
+import { TabButton } from './components/TabButton.tsx'
+import { BarChart2, Package, Repeat2, ShieldCheck } from 'lucide-react'
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
@@ -87,65 +89,34 @@ export function ExecutiveDashboardPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2" role="tablist">
-        <RiskScoreCard
-          score={data.riscoGeral.score}
-          classificacao={data.riscoGeral.classificacao}
+      <div className="flex flex-wrap gap-3 mb-6" role="tablist">
+        <TabButton
+          label="Geral"
+          icon={<BarChart2 size={18} />}
           isActive={activeTab === 'geral'}
           onClick={() => setActiveTab('geral')}
         />
 
-        <RiskCard
-          title="Risco de Retrabalho"
-          subtitle="Inspeções reprovadas, tempo médio de correção e reincidência"
-          highlightValue={formatPercent(data.retrabalho.taxaReprovacao)}
-          highlightLabel="Taxa de reprovação"
-          toneClassName="border-orange-200 bg-orange-50 text-orange-900 dark:border-orange-700/70 dark:bg-orange-900/20"
+        <TabButton
+          label="Retrabalho"
+          icon={<Repeat2 size={18} />}
           isActive={activeTab === 'retrabalho'}
           onClick={() => setActiveTab('retrabalho')}
-        >
-          <p className="text-sm text-gray-700 dark:text-gray-200">
-            Tempo médio de correção:{' '}
-            <strong>{data.retrabalho.tempoMedioCorrecaoDias} dias</strong>
-          </p>
-          <p className="text-sm text-gray-700 dark:text-gray-200">
-            Reincidência: <strong>{data.retrabalho.reincidencia}%</strong>
-          </p>
-        </RiskCard>
+        />
 
-        <RiskCard
-          title="Risco de Desperdício"
-          subtitle="Consumo vs previsto e variações de materiais"
-          highlightValue={formatPercent(data.desperdicio.desvioPercentual)}
-          highlightLabel="Desvio percentual acumulado"
-          toneClassName="border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-700/70 dark:bg-rose-900/20"
+        <TabButton
+          label="Desperdício"
+          icon={<Package size={18} />}
           isActive={activeTab === 'desperdicio'}
           onClick={() => setActiveTab('desperdicio')}
-        >
-          <p className="text-sm text-gray-700 dark:text-gray-200">
-            Obra mais crítica:{' '}
-            <strong>{data.desperdicio.obraMaisCritica}</strong>
-          </p>
-        </RiskCard>
+        />
 
-        <RiskCard
-          title="Risco Jurídico & Conformidade"
-          subtitle="Pendências documentais, treinamentos e obrigações legais"
-          highlightValue={`${data.compliance.indiceConformidade}`}
-          highlightLabel="Índice de conformidade (0–100)"
-          toneClassName="border-cyan-200 bg-cyan-50 text-cyan-900 dark:border-cyan-700/70 dark:bg-cyan-900/20"
+        <TabButton
+          label="Compliance"
+          icon={<ShieldCheck size={18} />}
           isActive={activeTab === 'compliance'}
           onClick={() => setActiveTab('compliance')}
-        >
-          <p className="text-sm text-gray-700 dark:text-gray-200">
-            Funcionários com pendência:{' '}
-            <strong>{data.compliance.pendenciasPercentual}%</strong>
-          </p>
-          <p className="text-sm text-gray-700 dark:text-gray-200">
-            Documentos vencidos:{' '}
-            <strong>{data.compliance.documentosVencidos}</strong>
-          </p>
-        </RiskCard>
+        />
       </div>
 
       <hr className="my-8 border-t border-gray-200 dark:border-gray-800" />
@@ -178,6 +149,7 @@ export function ExecutiveDashboardPage() {
                     : '--'}
                 </p>
               </div>
+
               <div className="rounded-lg bg-white/80 p-3 dark:bg-gray-900/40">
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   Perda com Desperdício
@@ -202,6 +174,7 @@ export function ExecutiveDashboardPage() {
                 value: `${item.ocorrencias}`,
               }))}
             />
+
             <TrendChart data={data.tendenciaMensal} />
           </>
         )}
