@@ -65,6 +65,7 @@ export function InspectionPage() {
     useState<InspectionStatus>('DRAFT')
   const [isReinspectionMode, setIsReinspectionMode] = useState(false)
   const [checklistType, setChecklistType] = useState('estrutural')
+  const [editableItemIds, setEditableItemIds] = useState<Set<string>>(new Set())
 
   const { register, watch, getValues, setValue, reset } =
     useForm<InspectionFormType>({
@@ -103,6 +104,17 @@ export function InspectionPage() {
 
     let sortedChecklist = inspection.data.checklist || []
     if (isReinspection) {
+      const pendingIds = new Set(
+        sortedChecklist
+          .filter(
+            (item) =>
+              item.status === 'fail' &&
+              item.failResolution === 'needs_correction',
+          )
+          .map((item) => item.id),
+      )
+      setEditableItemIds(pendingIds)
+
       const getPriority = (item: any) => {
         if (
           item.status === 'fail' &&
@@ -117,6 +129,8 @@ export function InspectionPage() {
       sortedChecklist = [...sortedChecklist].sort(
         (a, b) => getPriority(a) - getPriority(b),
       )
+    } else {
+      setEditableItemIds(new Set())
     }
 
     reset({
@@ -250,6 +264,7 @@ export function InspectionPage() {
           selectedChecklistType={checklistType}
           onChecklistTypeChange={handleChecklistTypeChange}
           isReinspectionMode={isReinspectionMode}
+          editableItemIds={editableItemIds}
         />
       </div>
 

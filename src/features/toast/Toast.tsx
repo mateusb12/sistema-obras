@@ -3,10 +3,10 @@ import {
   useContext,
   useState,
   useEffect,
-  ReactNode,
   isValidElement,
   useRef,
 } from 'react'
+import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react'
 
@@ -19,7 +19,7 @@ export interface ToastOptions {
 }
 
 export interface InternalToast {
-  id: number
+  id: string
   message: ReactNode
   type: ToastType
   duration: number
@@ -48,7 +48,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<InternalToast[]>([])
   const activeKeys = useRef<Set<string>>(new Set())
 
-  const removeToast = (id: number) => {
+  const removeToast = (id: string) => {
     setToasts((prev) => {
       const toast = prev.find((t) => t.id === id)
       if (toast?.dedupKey) {
@@ -61,6 +61,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const createDedupKey = (content: unknown): string => {
     try {
       if (typeof content === 'string') return content
+
       if (isValidElement(content)) {
         const extract = (node: any): string => {
           if (typeof node === 'string' || typeof node === 'number')
@@ -71,12 +72,23 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
         }
         return extract(content)
       }
+
       if (content instanceof Error) return content.message
+
       if (typeof content === 'object') return JSON.stringify(content)
+
       return String(content)
     } catch {
       return 'toast'
     }
+  }
+
+  const normalizeMessage = (msg: ToastOptions['message']): ReactNode => {
+    if (typeof msg === 'string' || typeof msg === 'number') return msg
+    if (isValidElement(msg)) return msg
+    if (msg instanceof Error) return msg.message
+    if (typeof msg === 'object') return JSON.stringify(msg)
+    return String(msg)
   }
 
   const show = ({
@@ -90,11 +102,11 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
 
     activeKeys.current.add(dedupKey)
 
-    const id = Date.now()
+    const id = crypto.randomUUID()
 
     const toast: InternalToast = {
       id,
-      message: typeof message === 'string' ? message : message,
+      message: normalizeMessage(message),
       type,
       duration,
       dedupKey,
@@ -151,7 +163,13 @@ const ToastItem = ({
   toast: InternalToast
   onClose: () => void
 }) => {
-  const { type, message } = toast
+  const { type, message, duration } = toast
+  const [progress, setProgress] = useState(100)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setProgress(0), 10)
+    return () => clearTimeout(timer)
+  }, [])
 
   const icon = {
     success: <CheckCircle className="text-green-500 w-5 h-5" />,
@@ -167,20 +185,37 @@ const ToastItem = ({
     info: 'border-blue-500/40 bg-blue-50 dark:bg-blue-900/20',
   }[type]
 
+  const progressColor = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    warning: 'bg-yellow-500',
+    info: 'bg-blue-500',
+  }[type]
+
   return (
     <div
-      className={`flex items-start gap-3 rounded-lg border p-4 shadow-md backdrop-blur-sm ${color} w-80`}
+      className={`relative overflow-hidden flex items-start gap-3 rounded-lg border p-4 shadow-md backdrop-blur-sm ${color} w-80`}
     >
       <div>{icon}</div>
-      <div className="flex-1 text-sm text-gray-800 dark:text-gray-200">
+      <div className="flex-1 text-sm text-gray-800 dark:text-gray-200 pb-1">
         {message}
       </div>
       <button
         onClick={onClose}
-        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 z-10"
       >
         <X className="w-4 h-4" />
       </button>
+
+      <div className="absolute bottom-0 left-0 h-1 w-full bg-black/5 dark:bg-white/5">
+        <div
+          className={`h-full ${progressColor}`}
+          style={{
+            width: `${progress}%`,
+            transition: `width ${duration}ms linear`,
+          }}
+        />
+      </div>
     </div>
   )
 }

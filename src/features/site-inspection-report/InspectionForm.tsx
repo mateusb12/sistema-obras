@@ -52,6 +52,7 @@ interface InspectionFormProps {
   selectedChecklistType: string
   onChecklistTypeChange: (type: string) => void
   isReinspectionMode: boolean
+  editableItemIds: Set<string>
 }
 
 export function InspectionForm({
@@ -68,6 +69,7 @@ export function InspectionForm({
   selectedChecklistType,
   onChecklistTypeChange,
   isReinspectionMode,
+  editableItemIds,
 }: InspectionFormProps) {
   const [newMember, setNewMember] = useState({ name: '', role: '' })
 
@@ -98,7 +100,11 @@ export function InspectionForm({
       return true
     }
 
-    return isItemPendingCorrection(item)
+    if (item.status === 'na') {
+      return true
+    }
+
+    return editableItemIds.has(item.id) || isItemPendingCorrection(item)
   }
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
