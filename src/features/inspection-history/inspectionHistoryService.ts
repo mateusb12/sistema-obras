@@ -126,10 +126,9 @@ function randomDateInCurrentMonth(): string {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
+  const today = now.getDate()
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-  const randomDay = Math.floor(Math.random() * daysInMonth) + 1
+  const randomDay = Math.floor(Math.random() * today) + 1
 
   const formattedMonth = String(month + 1).padStart(2, '0')
   const formattedDay = String(randomDay).padStart(2, '0')

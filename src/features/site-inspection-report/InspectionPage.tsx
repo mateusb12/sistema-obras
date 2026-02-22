@@ -14,6 +14,7 @@ import { InspectionForm } from './InspectionForm'
 import { PDFPreview } from './PDFPreview'
 import type { InspectionForm as InspectionFormType } from './types'
 import { CHECKLIST_ESTRUTURAL, CHECKLIST_NAO_ESTRUTURAL } from './constants.ts'
+import { useToast } from '../toast/Toast.tsx'
 
 function getDefaultValues(): InspectionFormType {
   return {
@@ -52,6 +53,7 @@ function isFutureDate(value: string): boolean {
 
 export function InspectionPage() {
   const { user } = useAuth()
+  const toast = useToast()
   const [saveMessage, setSaveMessage] = useState('')
   const [saveMessageType, setSaveMessageType] = useState<'success' | 'error'>(
     'success',
@@ -111,39 +113,33 @@ export function InspectionPage() {
   const persistInspection = (targetStatus: 'DRAFT' | 'FINISHED') => {
     const currentData = getValues()
 
-    const currentPendingItems = currentData.checklist.filter(
+    const pendingItems = currentData.checklist.filter(
       (item) =>
         item.status === 'fail' && item.failResolution === 'needs_correction',
     )
 
-    const currentHasInvalidCorrectionData = currentPendingItems.some(
-      (item) => !item.correctionPlan?.trim() || !item.reinspectionDate,
-    )
-
-    const currentHasFutureReinspectionDate = currentPendingItems.some(
-      (item) => item.reinspectionDate && isFutureDate(item.reinspectionDate),
-    )
-
-    if (targetStatus === 'FINISHED' && currentHasInvalidCorrectionData) {
-      setSaveMessageType('error')
-      setSaveMessage(
-        'Preencha plano de correção e data de reinspeção em todos os itens pendentes.',
+    if (targetStatus === 'FINISHED') {
+      const hasMissingData = pendingItems.some(
+        (item) => !item.correctionPlan?.trim() || !item.reinspectionDate,
       )
-      window.setTimeout(() => setSaveMessage(''), 3500)
-      return
-    }
 
-    if (
-      targetStatus === 'FINISHED' &&
-      isInspectionOpenCorrection(currentData) &&
-      currentHasFutureReinspectionDate
-    ) {
-      setSaveMessageType('error')
-      setSaveMessage(
-        'A ficha só pode ser finalizada após a data de reinspeção dos itens pendentes.',
+      if (hasMissingData) {
+        toast.error(
+          'Atenção: Preencha o plano de correção e a data em todos os itens reprovados.',
+        )
+        return
+      }
+
+      const hasFutureDate = pendingItems.some(
+        (item) => item.reinspectionDate && isFutureDate(item.reinspectionDate),
       )
-      window.setTimeout(() => setSaveMessage(''), 4000)
-      return
+
+      if (hasFutureDate) {
+        toast.error(
+          'Bloqueio: Você não pode finalizar uma ficha com data futura de reinspeção.',
+        )
+        return
+      }
     }
 
     const statusForPersistence: InspectionStatus =
@@ -156,37 +152,33 @@ export function InspectionPage() {
       createdBy: user?.name || 'Usuário não identificado',
     })
 
-    const resolvedStatus = deriveInspectionStatus(
-      currentData,
-      statusForPersistence,
-    )
+    const newStatus = deriveInspectionStatus(currentData, statusForPersistence)
+    const isNowFinished = newStatus === 'FINISHED'
 
-    setEditingInspectionId(saved.id)
-    setEditingBaseStatus(resolvedStatus)
-    setIsReinspectionMode(
-      resolvedStatus === 'OPEN_CORRECTION' ||
-        resolvedStatus === 'DRAFT_OPEN_CORRECTION',
-    )
+    if (targetStatus === 'DRAFT') {
+      toast.success('Rascunho atualizado com sucesso!')
+    } else if (isNowFinished) {
+      toast.success('Sucesso! A inspeção foi totalmente concluída e arquivada.')
 
-    setSaveMessageType('success')
-    setSaveMessage(
-      targetStatus === 'DRAFT'
-        ? 'Rascunho salvo com sucesso!'
-        : resolvedStatus === 'OPEN_CORRECTION'
-          ? 'Inspeção marcada como não-conforme (pendente de reinspeção).'
-          : 'Inspeção finalizada com sucesso!',
-    )
-
-    if (resolvedStatus === 'FINISHED') {
       reset(getDefaultValues())
-      setChecklistType('estrutural')
       setEditingInspectionId(null)
       setEditingBaseStatus('DRAFT')
       setIsReinspectionMode(false)
       clearInspectionInEdition()
+    } else {
+      toast.info(
+        'Dados salvos! A ficha continua como "Aguardando Reinspeção" pois ainda há itens com falha.',
+      )
     }
 
-    window.setTimeout(() => setSaveMessage(''), 3000)
+    if (!isNowFinished) {
+      setEditingInspectionId(saved.id)
+      setEditingBaseStatus(newStatus)
+      setIsReinspectionMode(
+        newStatus === 'OPEN_CORRECTION' ||
+          newStatus === 'DRAFT_OPEN_CORRECTION',
+      )
+    }
   }
 
   const loadChecklist = (type: string) => {
@@ -235,17 +227,6 @@ export function InspectionPage() {
           onChecklistTypeChange={handleChecklistTypeChange}
           isReinspectionMode={isReinspectionMode}
         />
-        {saveMessage && (
-          <p
-            className={`mt-4 rounded-md px-3 py-2 text-sm ${
-              saveMessageType === 'error'
-                ? 'border border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300'
-                : 'border border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300'
-            }`}
-          >
-            {saveMessage}
-          </p>
-        )}
       </div>
 
       <div className="mt-6 block min-h-0 overflow-y-auto overflow-x-auto lg:mt-0">
