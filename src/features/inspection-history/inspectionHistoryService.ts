@@ -37,6 +37,35 @@ function randomResolution(): 'non_conform' | 'needs_correction' {
   return pickRandom(['non_conform', 'needs_correction'])
 }
 
+export function isInspectionOpenCorrection(form: InspectionForm): boolean {
+  return form.checklist.some(
+    (item) =>
+      item.status === 'fail' && item.failResolution === 'needs_correction',
+  )
+}
+
+export function deriveInspectionStatus(
+  form: InspectionForm,
+  currentStatus?: InspectionStatus,
+): InspectionStatus {
+  if (currentStatus === 'DRAFT') {
+    return 'DRAFT'
+  }
+
+  return isInspectionOpenCorrection(form) ? 'OPEN_CORRECTION' : 'FINISHED'
+}
+
+function normalizeForm(form: InspectionForm): InspectionForm {
+  return {
+    ...form,
+    checklist: form.checklist.map((item) => ({
+      ...item,
+      failResolution: item.failResolution ?? null,
+      correctionPlan: item.correctionPlan?.trim() || undefined,
+    })),
+  }
+}
+
 function buildSearchIndex(form: InspectionForm): string {
   return [
     form.header.title,
@@ -66,7 +95,9 @@ function withDefaultTitle(form: InspectionForm): InspectionForm {
 function normalizeEntry(
   entry: Partial<InspectionHistoryEntry>,
 ): InspectionHistoryEntry {
-  const normalizedData = withDefaultTitle(entry.data as InspectionForm)
+  const normalizedData = withDefaultTitle(
+    normalizeForm(entry.data as InspectionForm),
+  )
   const createdAt = entry.createdAt || new Date().toISOString()
 
   return {
@@ -74,7 +105,7 @@ function normalizeEntry(
     createdAt,
     updatedAt: entry.updatedAt || createdAt,
     createdBy: entry.createdBy || 'Usuário não identificado',
-    status: entry.status || 'FINISHED',
+    status: deriveInspectionStatus(normalizedData, entry.status),
     data: normalizedData,
     searchIndex: entry.searchIndex || buildSearchIndex(normalizedData),
   }
@@ -197,7 +228,7 @@ export function upsertInspection({
   status,
 }: UpsertInspectionInput): InspectionHistoryEntry {
   const inspections = readInspections()
-  const normalizedForm = withDefaultTitle(form)
+  const normalizedForm = withDefaultTitle(normalizeForm(form))
   const now = new Date().toISOString()
 
   if (id) {
@@ -209,7 +240,7 @@ export function upsertInspection({
       return {
         ...inspection,
         updatedAt: now,
-        status,
+        status: deriveInspectionStatus(normalizedForm, status),
         data: normalizedForm,
         searchIndex: buildSearchIndex(normalizedForm),
       }
@@ -224,7 +255,7 @@ export function upsertInspection({
     createdAt: now,
     updatedAt: now,
     createdBy,
-    status,
+    status: deriveInspectionStatus(normalizedForm, status),
     data: normalizedForm,
     searchIndex: buildSearchIndex(normalizedForm),
   }

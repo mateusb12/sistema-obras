@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { usePDF } from '@react-pdf/renderer'
 import { InspectionPDFDocument } from './PDFDocument'
+import type { InspectionStatus } from '../inspection-history'
 import type { InspectionForm } from './types'
 import {
   ZoomIn,
@@ -20,11 +21,12 @@ import 'react-pdf/dist/Page/TextLayer.css'
 
 interface PDFPreviewProps {
   data: InspectionForm
+  status?: InspectionStatus
 }
 
-export function PDFPreview({ data }: PDFPreviewProps) {
+export function PDFPreview({ data, status }: PDFPreviewProps) {
   const [instance, updateInstance] = usePDF({
-    document: <InspectionPDFDocument data={data} />,
+    document: <InspectionPDFDocument data={data} status={status} />,
   })
 
   const [numPages, setNumPages] = useState<number>(0)
@@ -32,8 +34,8 @@ export function PDFPreview({ data }: PDFPreviewProps) {
   const [scale, setScale] = useState<number>(1.0)
 
   useEffect(() => {
-    updateInstance(<InspectionPDFDocument data={data} />)
-  }, [data, updateInstance])
+    updateInstance(<InspectionPDFDocument data={data} status={status} />)
+  }, [data, status, updateInstance])
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages)

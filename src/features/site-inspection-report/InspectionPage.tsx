@@ -3,8 +3,10 @@ import { useForm } from 'react-hook-form'
 import { useAuth } from '../../auth/useAuth'
 import {
   clearInspectionInEdition,
+  deriveInspectionStatus,
   getInspectionById,
   getInspectionInEditionId,
+  isInspectionOpenCorrection,
   upsertInspection,
 } from '../inspection-history'
 import { InspectionForm } from './InspectionForm'
@@ -36,6 +38,7 @@ function getDefaultValues(): InspectionFormType {
       status: 'na',
       failReason: '',
       failResolution: null,
+      correctionPlan: undefined,
     })),
 
     observations: '',
@@ -45,9 +48,13 @@ function getDefaultValues(): InspectionFormType {
 export function InspectionPage() {
   const { user } = useAuth()
   const [saveMessage, setSaveMessage] = useState('')
+  const [saveMessageType, setSaveMessageType] = useState<'success' | 'error'>(
+    'success',
+  )
   const [editingInspectionId, setEditingInspectionId] = useState<string | null>(
     null,
   )
+  const [isReinspectionMode, setIsReinspectionMode] = useState(false)
   const [checklistType, setChecklistType] = useState('estrutural')
   const { register, watch, setValue, reset } = useForm<InspectionFormType>({
     defaultValues: getDefaultValues(),
@@ -64,12 +71,17 @@ export function InspectionPage() {
 
     const inspection = getInspectionById(inspectionId)
 
-    if (!inspection || inspection.status !== 'DRAFT') {
+    if (
+      !inspection ||
+      (inspection.status !== 'DRAFT' && inspection.status !== 'OPEN_CORRECTION')
+    ) {
       clearInspectionInEdition()
       return
     }
 
     setEditingInspectionId(inspection.id)
+    setIsReinspectionMode(inspection.status === 'OPEN_CORRECTION')
+    setChecklistType(inspection.data.inspectionType || 'estrutural')
     reset(inspection.data)
     clearInspectionInEdition()
   }, [reset])
@@ -88,7 +100,23 @@ export function InspectionPage() {
     setValue('header.projectName', projectName)
   }
 
+  const hasInvalidCorrectionPlan = formData.checklist.some(
+    (item) =>
+      item.status === 'fail' &&
+      item.failResolution === 'needs_correction' &&
+      !item.correctionPlan?.trim(),
+  )
+
   const persistInspection = (status: 'DRAFT' | 'FINISHED') => {
+    if (status === 'FINISHED' && hasInvalidCorrectionPlan) {
+      setSaveMessageType('error')
+      setSaveMessage(
+        'Preencha o plano de correção em todos os itens com “Solicitar correção”.',
+      )
+      window.setTimeout(() => setSaveMessage(''), 3500)
+      return
+    }
+
     const saved = upsertInspection({
       id: editingInspectionId || undefined,
       form: formData,
@@ -96,15 +124,22 @@ export function InspectionPage() {
       createdBy: user?.name || 'Usuário não identificado',
     })
 
+    const derivedStatus = deriveInspectionStatus(formData, status)
+
     setEditingInspectionId(status === 'DRAFT' ? saved.id : null)
+    setSaveMessageType('success')
     setSaveMessage(
       status === 'DRAFT'
         ? 'Rascunho salvo com sucesso!'
-        : 'Inspeção finalizada com sucesso!',
+        : derivedStatus === 'OPEN_CORRECTION'
+          ? 'Inspeção salva como pendente de correção.'
+          : 'Inspeção finalizada com sucesso!',
     )
 
-    if (status === 'FINISHED') {
+    if (status === 'FINISHED' && !isInspectionOpenCorrection(formData)) {
       reset(getDefaultValues())
+      setChecklistType('estrutural')
+      setIsReinspectionMode(false)
       clearInspectionInEdition()
     }
 
@@ -127,6 +162,7 @@ export function InspectionPage() {
         status: 'na',
         failReason: '',
         failResolution: null,
+        correctionPlan: undefined,
       })),
     )
   }
@@ -153,9 +189,16 @@ export function InspectionPage() {
           isEditing={Boolean(editingInspectionId)}
           selectedChecklistType={checklistType}
           onChecklistTypeChange={handleChecklistTypeChange}
+          isReinspectionMode={isReinspectionMode}
         />
         {saveMessage && (
-          <p className="mt-4 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300">
+          <p
+            className={`mt-4 rounded-md px-3 py-2 text-sm ${
+              saveMessageType === 'error'
+                ? 'border border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300'
+                : 'border border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300'
+            }`}
+          >
             {saveMessage}
           </p>
         )}

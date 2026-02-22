@@ -14,6 +14,7 @@ export interface ChecklistItem {
   status: 'pass' | 'fail' | 'na'
   failReason: string
   failResolution: 'non_conform' | 'needs_correction' | null
+  correctionPlan?: string
 }
 
 export interface ProjectHeader {

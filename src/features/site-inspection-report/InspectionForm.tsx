@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Plus,
   Trash2,
@@ -51,6 +51,7 @@ interface InspectionFormProps {
 
   selectedChecklistType: string
   onChecklistTypeChange: (type: string) => void
+  isReinspectionMode: boolean
 }
 
 export function InspectionForm({
@@ -66,6 +67,7 @@ export function InspectionForm({
   isEditing,
   selectedChecklistType,
   onChecklistTypeChange,
+  isReinspectionMode,
 }: InspectionFormProps) {
   const [newMember, setNewMember] = useState({ name: '', role: '' })
 
@@ -76,6 +78,28 @@ export function InspectionForm({
     sampling: '100%',
     inspectionMethod: '',
   })
+
+  const [toastMessage, setToastMessage] = useState('')
+
+  useEffect(() => {
+    if (!toastMessage) {
+      return
+    }
+
+    const timer = window.setTimeout(() => setToastMessage(''), 2500)
+    return () => window.clearTimeout(timer)
+  }, [toastMessage])
+
+  const isItemPendingCorrection = (item: ChecklistItem) =>
+    item.status === 'fail' && item.failResolution === 'needs_correction'
+
+  const isItemEditable = (item: ChecklistItem) => {
+    if (!isReinspectionMode) {
+      return true
+    }
+
+    return isItemPendingCorrection(item)
+  }
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedName = e.target.value
@@ -115,6 +139,7 @@ export function InspectionForm({
           status: 'na',
           failReason: '',
           failResolution: null,
+          correctionPlan: undefined,
         },
       ])
       setNewItem({
@@ -148,6 +173,7 @@ export function InspectionForm({
           status,
           failReason: '',
           failResolution: null,
+          correctionPlan: undefined,
         }
       }),
     )
@@ -166,8 +192,33 @@ export function InspectionForm({
     failResolution: 'non_conform' | 'needs_correction',
   ) => {
     onChecklistChange(
+      checklist.map((item) => {
+        if (item.id !== id) {
+          return item
+        }
+
+        const nextItem = {
+          ...item,
+          failResolution,
+          correctionPlan:
+            failResolution === 'needs_correction'
+              ? item.correctionPlan || ''
+              : undefined,
+        }
+
+        if (failResolution === 'needs_correction') {
+          setToastMessage('Correção solicitada para este item.')
+        }
+
+        return nextItem
+      }),
+    )
+  }
+
+  const handleCorrectionPlanChange = (id: string, correctionPlan: string) => {
+    onChecklistChange(
       checklist.map((item) =>
-        item.id === id ? { ...item, failResolution } : item,
+        item.id === id ? { ...item, correctionPlan } : item,
       ),
     )
   }
@@ -176,6 +227,11 @@ export function InspectionForm({
 
   return (
     <div className="space-y-8 pb-10">
+      {toastMessage && (
+        <div className="rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+          {toastMessage}
+        </div>
+      )}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">
           Informações do Projeto
@@ -392,6 +448,13 @@ export function InspectionForm({
           </span>
         </div>
 
+        {isReinspectionMode && (
+          <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+            Reinspeção ativa: apenas itens pendentes de correção podem ser
+            alterados.
+          </p>
+        )}
+
         <div className="space-y-3">
           {checklist.map((item) => (
             <div
@@ -444,6 +507,7 @@ export function InspectionForm({
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => handleStatusChange(item.id, 'pass')}
+                    disabled={!isItemEditable(item)}
                     className={`
                       flex items-center gap-2 px-3 py-2 rounded-md font-medium transition-all text-sm
                       ${
@@ -451,6 +515,7 @@ export function InspectionForm({
                           ? 'bg-green-600 text-white shadow-md'
                           : 'bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-green-900/30'
                       }
+                      disabled:opacity-40 disabled:cursor-not-allowed
                     `}
                   >
                     <CheckCircle size={18} />
@@ -459,6 +524,7 @@ export function InspectionForm({
 
                   <button
                     onClick={() => handleStatusChange(item.id, 'fail')}
+                    disabled={!isItemEditable(item)}
                     className={`
                       flex items-center gap-2 px-3 py-2 rounded-md font-medium transition-all text-sm
                       ${
@@ -466,6 +532,7 @@ export function InspectionForm({
                           ? 'bg-red-600 text-white shadow-md'
                           : 'bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-red-900/30'
                       }
+                      disabled:opacity-40 disabled:cursor-not-allowed
                     `}
                   >
                     <XCircle size={18} />
@@ -484,6 +551,7 @@ export function InspectionForm({
                     onChange={(e) =>
                       handleFailReasonChange(item.id, e.target.value)
                     }
+                    disabled={!isItemEditable(item)}
                     rows={3}
                     className={INPUT_CLASS}
                     placeholder="Descreva o motivo da reprovação..."
@@ -493,7 +561,9 @@ export function InspectionForm({
                       onClick={() =>
                         handleFailResolutionChange(item.id, 'non_conform')
                       }
-                      disabled={!item.failReason.trim()}
+                      disabled={
+                        !item.failReason.trim() || !isItemEditable(item)
+                      }
                       className={`
                         px-3 py-2 rounded-md font-medium transition-all text-sm
                         ${
@@ -511,7 +581,9 @@ export function InspectionForm({
                       onClick={() =>
                         handleFailResolutionChange(item.id, 'needs_correction')
                       }
-                      disabled={!item.failReason.trim()}
+                      disabled={
+                        !item.failReason.trim() || !isItemEditable(item)
+                      }
                       className={`
                         px-3 py-2 rounded-md font-medium transition-all text-sm
                         ${
@@ -525,6 +597,23 @@ export function InspectionForm({
                       Solicitar Correção
                     </button>
                   </div>
+                  {isItemPendingCorrection(item) && (
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-red-800 dark:text-red-300">
+                        Como será corrigido?
+                      </label>
+                      <textarea
+                        value={item.correctionPlan || ''}
+                        onChange={(e) =>
+                          handleCorrectionPlanChange(item.id, e.target.value)
+                        }
+                        rows={3}
+                        disabled={!isItemEditable(item)}
+                        className={INPUT_CLASS}
+                        placeholder="Descreva o plano de correção..."
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
