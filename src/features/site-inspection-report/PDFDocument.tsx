@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
 } from '@react-pdf/renderer'
+import type { InspectionStatus } from '../inspection-history'
 import type { InspectionForm } from './types'
 
 const logoUrl = new URL('../../assets/casasmanagerdark.png', import.meta.url)
@@ -33,6 +34,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderBottom: '2px solid #000',
     paddingBottom: 10,
+  },
+  pendingBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fee2e2',
+    color: '#991b1b',
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginBottom: 8,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 16,
@@ -132,9 +143,10 @@ const styles = StyleSheet.create({
 
 interface PDFDocumentProps {
   data: InspectionForm
+  status?: InspectionStatus
 }
 
-export function InspectionPDFDocument({ data }: PDFDocumentProps) {
+export function InspectionPDFDocument({ data, status }: PDFDocumentProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -142,6 +154,10 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
           <View style={styles.logoContainer}>
             <Image src={logoUrl} style={styles.logo} />
           </View>
+          {(status === 'OPEN_CORRECTION' ||
+            status === 'DRAFT_OPEN_CORRECTION') && (
+            <Text style={styles.pendingBadge}>PENDENTE DE CORREÇÃO</Text>
+          )}
           <Text style={styles.title}>Relatório de Inspeção Digital</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Título:</Text>
@@ -221,7 +237,7 @@ export function InspectionPDFDocument({ data }: PDFDocumentProps) {
                 const resolutionText =
                   item.status === 'fail'
                     ? item.failResolution === 'needs_correction'
-                      ? 'Solicitar correção'
+                      ? `Solicitar correção${item.correctionPlan?.trim() ? ` — Plano: ${item.correctionPlan.trim()}` : ''}${item.reinspectionDate ? ` — Reinspeção: ${item.reinspectionDate}` : ''}`
                       : item.failResolution === 'non_conform'
                         ? 'Aceitar como está'
                         : '-'

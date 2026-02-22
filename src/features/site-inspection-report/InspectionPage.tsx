@@ -3,19 +3,22 @@ import { useForm } from 'react-hook-form'
 import { useAuth } from '../../auth/useAuth'
 import {
   clearInspectionInEdition,
+  deriveInspectionStatus,
   getInspectionById,
   getInspectionInEditionId,
+  isInspectionOpenCorrection,
   upsertInspection,
+  type InspectionStatus,
 } from '../inspection-history'
 import { InspectionForm } from './InspectionForm'
 import { PDFPreview } from './PDFPreview'
 import type { InspectionForm as InspectionFormType } from './types'
 import { CHECKLIST_ESTRUTURAL, CHECKLIST_NAO_ESTRUTURAL } from './constants.ts'
+import { useToast } from '../toast/Toast.tsx'
 
 function getDefaultValues(): InspectionFormType {
   return {
     inspectionType: 'estrutural',
-
     header: {
       title: 'Inspeção 104-B',
       projectName: 'Flamboyant II',
@@ -23,9 +26,7 @@ function getDefaultValues(): InspectionFormType {
       date: new Date().toISOString().split('T')[0],
       inspectorName: 'Rafael Bruno',
     },
-
     team: [],
-
     checklist: CHECKLIST_ESTRUTURAL.map((item) => ({
       id: crypto.randomUUID(),
       category: item.category,
@@ -36,79 +37,186 @@ function getDefaultValues(): InspectionFormType {
       status: 'na',
       failReason: '',
       failResolution: null,
+      correctionPlan: undefined,
+      reinspectionDate: undefined,
     })),
-
     observations: '',
   }
 }
 
+function isFutureDate(value: string): boolean {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(`${value}T00:00:00`)
+  return target.getTime() > today.getTime()
+}
+
 export function InspectionPage() {
   const { user } = useAuth()
+  const toast = useToast()
   const [saveMessage, setSaveMessage] = useState('')
+  const [saveMessageType, setSaveMessageType] = useState<'success' | 'error'>(
+    'success',
+  )
   const [editingInspectionId, setEditingInspectionId] = useState<string | null>(
     null,
   )
+  const [editingBaseStatus, setEditingBaseStatus] =
+    useState<InspectionStatus>('DRAFT')
+  const [isReinspectionMode, setIsReinspectionMode] = useState(false)
   const [checklistType, setChecklistType] = useState('estrutural')
-  const { register, watch, setValue, reset } = useForm<InspectionFormType>({
-    defaultValues: getDefaultValues(),
-  })
+  const [editableItemIds, setEditableItemIds] = useState<Set<string>>(new Set())
+
+  const { register, watch, getValues, setValue, reset } =
+    useForm<InspectionFormType>({
+      defaultValues: getDefaultValues(),
+    })
 
   const formData = watch()
 
   useEffect(() => {
     const inspectionId = getInspectionInEditionId()
-
-    if (!inspectionId) {
-      return
-    }
+    if (!inspectionId) return
 
     const inspection = getInspectionById(inspectionId)
-
-    if (!inspection || inspection.status !== 'DRAFT') {
+    if (!inspection) {
       clearInspectionInEdition()
       return
     }
 
+    if (
+      inspection.status !== 'DRAFT' &&
+      inspection.status !== 'DRAFT_OPEN_CORRECTION' &&
+      inspection.status !== 'OPEN_CORRECTION'
+    ) {
+      clearInspectionInEdition()
+      return
+    }
+
+    const isReinspection =
+      inspection.status === 'OPEN_CORRECTION' ||
+      inspection.status === 'DRAFT_OPEN_CORRECTION'
+
     setEditingInspectionId(inspection.id)
-    reset(inspection.data)
+    setEditingBaseStatus(inspection.status)
+    setIsReinspectionMode(isReinspection)
+    setChecklistType(inspection.data.inspectionType || 'estrutural')
+
+    let sortedChecklist = inspection.data.checklist || []
+    if (isReinspection) {
+      const pendingIds = new Set(
+        sortedChecklist
+          .filter(
+            (item) =>
+              item.status === 'fail' &&
+              item.failResolution === 'needs_correction',
+          )
+          .map((item) => item.id),
+      )
+      setEditableItemIds(pendingIds)
+
+      const getPriority = (item: any) => {
+        if (
+          item.status === 'fail' &&
+          item.failResolution === 'needs_correction'
+        )
+          return 0
+        if (item.status === 'fail') return 1
+        if (item.status === 'ok') return 2
+        return 3
+      }
+
+      sortedChecklist = [...sortedChecklist].sort(
+        (a, b) => getPriority(a) - getPriority(b),
+      )
+    } else {
+      setEditableItemIds(new Set())
+    }
+
+    reset({
+      ...inspection.data,
+      checklist: sortedChecklist,
+    })
+
     clearInspectionInEdition()
   }, [reset])
 
-  const handleTeamChange = (team: InspectionFormType['team']) => {
+  const handleTeamChange = (team: InspectionFormType['team']) =>
     setValue('team', team)
-  }
-
-  const handleChecklistChange = (
-    checklist: InspectionFormType['checklist'],
-  ) => {
+  const handleChecklistChange = (checklist: InspectionFormType['checklist']) =>
     setValue('checklist', checklist)
-  }
-
-  const handleProjectChange = (projectName: string) => {
+  const handleProjectChange = (projectName: string) =>
     setValue('header.projectName', projectName)
-  }
 
-  const persistInspection = (status: 'DRAFT' | 'FINISHED') => {
+  const persistInspection = (targetStatus: 'DRAFT' | 'FINISHED') => {
+    const currentData = getValues()
+
+    const pendingItems = currentData.checklist.filter(
+      (item) =>
+        item.status === 'fail' && item.failResolution === 'needs_correction',
+    )
+
+    if (targetStatus === 'FINISHED') {
+      const hasMissingData = pendingItems.some(
+        (item) => !item.correctionPlan?.trim() || !item.reinspectionDate,
+      )
+
+      if (hasMissingData) {
+        toast.error(
+          'Atenção: Preencha o plano de correção e a data em todos os itens reprovados.',
+        )
+        return
+      }
+
+      const hasFutureDate = pendingItems.some(
+        (item) => item.reinspectionDate && isFutureDate(item.reinspectionDate),
+      )
+
+      if (hasFutureDate) {
+        toast.error(
+          'Bloqueio: Você não pode finalizar uma ficha com data futura de reinspeção.',
+        )
+        return
+      }
+    }
+
+    const statusForPersistence: InspectionStatus =
+      targetStatus === 'DRAFT' ? editingBaseStatus : 'FINISHED'
+
     const saved = upsertInspection({
       id: editingInspectionId || undefined,
-      form: formData,
-      status,
+      form: currentData,
+      status: statusForPersistence,
       createdBy: user?.name || 'Usuário não identificado',
     })
 
-    setEditingInspectionId(status === 'DRAFT' ? saved.id : null)
-    setSaveMessage(
-      status === 'DRAFT'
-        ? 'Rascunho salvo com sucesso!'
-        : 'Inspeção finalizada com sucesso!',
-    )
+    const newStatus = deriveInspectionStatus(currentData, statusForPersistence)
+    const isNowFinished = newStatus === 'FINISHED'
 
-    if (status === 'FINISHED') {
+    if (targetStatus === 'DRAFT') {
+      toast.success('Rascunho atualizado com sucesso!')
+    } else if (isNowFinished) {
+      toast.success('Sucesso! A inspeção foi totalmente concluída e arquivada.')
+
       reset(getDefaultValues())
+      setEditingInspectionId(null)
+      setEditingBaseStatus('DRAFT')
+      setIsReinspectionMode(false)
       clearInspectionInEdition()
+    } else {
+      toast.info(
+        'Dados salvos! A ficha continua como "Aguardando Reinspeção" pois ainda há itens com falha.',
+      )
     }
 
-    window.setTimeout(() => setSaveMessage(''), 3000)
+    if (!isNowFinished) {
+      setEditingInspectionId(saved.id)
+      setEditingBaseStatus(newStatus)
+      setIsReinspectionMode(
+        newStatus === 'OPEN_CORRECTION' ||
+          newStatus === 'DRAFT_OPEN_CORRECTION',
+      )
+    }
   }
 
   const loadChecklist = (type: string) => {
@@ -127,6 +235,8 @@ export function InspectionPage() {
         status: 'na',
         failReason: '',
         failResolution: null,
+        correctionPlan: undefined,
+        reinspectionDate: undefined,
       })),
     )
   }
@@ -153,17 +263,17 @@ export function InspectionPage() {
           isEditing={Boolean(editingInspectionId)}
           selectedChecklistType={checklistType}
           onChecklistTypeChange={handleChecklistTypeChange}
+          isReinspectionMode={isReinspectionMode}
+          editableItemIds={editableItemIds}
         />
-        {saveMessage && (
-          <p className="mt-4 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300">
-            {saveMessage}
-          </p>
-        )}
       </div>
 
       <div className="mt-6 block min-h-0 overflow-y-auto overflow-x-auto lg:mt-0">
         <div className="mx-auto min-w-[600px]">
-          <PDFPreview data={formData} />
+          <PDFPreview
+            data={formData}
+            status={deriveInspectionStatus(formData, editingBaseStatus)}
+          />
         </div>
       </div>
     </div>

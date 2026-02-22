@@ -5,6 +5,7 @@ export const APP_ROUTES = {
   ENGINEERING: '/engineering',
   INSPECTION: '/inspection',
   HISTORY: '/history',
+  CORRECTIONS: '/corrections',
   INVENTORY_DASHBOARD: '/inventory/dashboard',
   INVENTORY_REGISTRY: '/inventory/materials',
   INVENTORY_LOGS: '/inventory/logs',

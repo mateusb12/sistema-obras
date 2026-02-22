@@ -12,7 +12,7 @@ import { ROLES } from './auth/types'
 import { AdminPanel, EngineeringPanel } from './pages/RolePanels'
 import { useAuth } from './auth/useAuth'
 import { InspectionPage } from './features/site-inspection-report'
-import { HistoryPage } from './features/inspection-history'
+import { CorrectionsPage, HistoryPage } from './features/inspection-history'
 import { ExecutiveDashboardPage } from './features/executive-dashboard'
 import {
   ConsumptionLogPage,
@@ -97,6 +97,16 @@ function App() {
         <PrivateRoute>
           <FullLayout currentRoute={pathname}>
             <HistoryPage />
+          </FullLayout>
+        </PrivateRoute>
+      )
+    }
+
+    if (pathname === APP_ROUTES.CORRECTIONS) {
+      return (
+        <PrivateRoute>
+          <FullLayout currentRoute={pathname}>
+            <CorrectionsPage />
           </FullLayout>
         </PrivateRoute>
       )

@@ -37,6 +37,38 @@ function randomResolution(): 'non_conform' | 'needs_correction' {
   return pickRandom(['non_conform', 'needs_correction'])
 }
 
+export function isInspectionOpenCorrection(form: InspectionForm): boolean {
+  return form.checklist.some(
+    (item) =>
+      item.status === 'fail' && item.failResolution === 'needs_correction',
+  )
+}
+
+export function deriveInspectionStatus(
+  form: InspectionForm,
+  currentStatus?: InspectionStatus,
+): InspectionStatus {
+  const hasPendingCorrection = isInspectionOpenCorrection(form)
+
+  if (currentStatus === 'DRAFT' || currentStatus === 'DRAFT_OPEN_CORRECTION') {
+    return hasPendingCorrection ? 'DRAFT_OPEN_CORRECTION' : 'DRAFT'
+  }
+
+  return hasPendingCorrection ? 'OPEN_CORRECTION' : 'FINISHED'
+}
+
+function normalizeForm(form: InspectionForm): InspectionForm {
+  return {
+    ...form,
+    checklist: form.checklist.map((item) => ({
+      ...item,
+      failResolution: item.failResolution ?? null,
+      correctionPlan: item.correctionPlan?.trim() || undefined,
+      reinspectionDate: item.reinspectionDate || undefined,
+    })),
+  }
+}
+
 function buildSearchIndex(form: InspectionForm): string {
   return [
     form.header.title,
@@ -66,7 +98,9 @@ function withDefaultTitle(form: InspectionForm): InspectionForm {
 function normalizeEntry(
   entry: Partial<InspectionHistoryEntry>,
 ): InspectionHistoryEntry {
-  const normalizedData = withDefaultTitle(entry.data as InspectionForm)
+  const normalizedData = withDefaultTitle(
+    normalizeForm(entry.data as InspectionForm),
+  )
   const createdAt = entry.createdAt || new Date().toISOString()
 
   return {
@@ -74,7 +108,15 @@ function normalizeEntry(
     createdAt,
     updatedAt: entry.updatedAt || createdAt,
     createdBy: entry.createdBy || 'Usuário não identificado',
-    status: entry.status || 'FINISHED',
+    status: deriveInspectionStatus(
+      normalizedData,
+      entry.status === 'DRAFT' ||
+        entry.status === 'DRAFT_OPEN_CORRECTION' ||
+        entry.status === 'FINISHED' ||
+        entry.status === 'OPEN_CORRECTION'
+        ? entry.status
+        : 'FINISHED',
+    ),
     data: normalizedData,
     searchIndex: entry.searchIndex || buildSearchIndex(normalizedData),
   }
@@ -84,10 +126,9 @@ function randomDateInCurrentMonth(): string {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
+  const today = now.getDate()
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-  const randomDay = Math.floor(Math.random() * daysInMonth) + 1
+  const randomDay = Math.floor(Math.random() * today) + 1
 
   const formattedMonth = String(month + 1).padStart(2, '0')
   const formattedDay = String(randomDay).padStart(2, '0')
@@ -131,6 +172,12 @@ function buildRandomInspection(): InspectionHistoryEntry {
 
       checklist: checklistSource.map((item) => {
         const status = randomStatus()
+        const failResolution = status === 'fail' ? randomResolution() : null
+        const reinspectionDate =
+          failResolution === 'needs_correction'
+            ? randomDateInCurrentMonth()
+            : undefined
+
         return {
           id: crypto.randomUUID(),
           category: item.category,
@@ -140,7 +187,12 @@ function buildRandomInspection(): InspectionHistoryEntry {
           inspectionMethod: item.inspectionMethod,
           status,
           failReason: status === 'fail' ? randomFailReason() : '',
-          failResolution: status === 'fail' ? randomResolution() : null,
+          failResolution,
+          correctionPlan:
+            failResolution === 'needs_correction'
+              ? 'Equipe de acabamento irá corrigir o item e validar alinhamento.'
+              : undefined,
+          reinspectionDate,
         }
       }),
 
@@ -197,7 +249,7 @@ export function upsertInspection({
   status,
 }: UpsertInspectionInput): InspectionHistoryEntry {
   const inspections = readInspections()
-  const normalizedForm = withDefaultTitle(form)
+  const normalizedForm = withDefaultTitle(normalizeForm(form))
   const now = new Date().toISOString()
 
   if (id) {
@@ -209,7 +261,7 @@ export function upsertInspection({
       return {
         ...inspection,
         updatedAt: now,
-        status,
+        status: deriveInspectionStatus(normalizedForm, status),
         data: normalizedForm,
         searchIndex: buildSearchIndex(normalizedForm),
       }
@@ -224,7 +276,7 @@ export function upsertInspection({
     createdAt: now,
     updatedAt: now,
     createdBy,
-    status,
+    status: deriveInspectionStatus(normalizedForm, status),
     data: normalizedForm,
     searchIndex: buildSearchIndex(normalizedForm),
   }

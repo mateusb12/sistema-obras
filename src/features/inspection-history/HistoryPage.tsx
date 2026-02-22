@@ -12,11 +12,26 @@ import {
   renameInspection,
   setInspectionInEdition,
 } from './inspectionHistoryService'
-import type { InspectionHistoryEntry } from './types'
+import type { InspectionHistoryEntry, InspectionStatus } from './types'
 import { InspectionCalendar } from './components/InspectionCalendar.tsx'
 
 function hasNonConformity(inspection: InspectionHistoryEntry): boolean {
   return inspection.data.checklist.some((item) => item.status === 'fail')
+}
+
+function getStatusLabel(status: InspectionStatus): string {
+  if (status === 'DRAFT' || status === 'DRAFT_OPEN_CORRECTION')
+    return 'Rascunho'
+  if (status === 'OPEN_CORRECTION') return 'Aguardando reinspeção'
+  return 'Finalizada'
+}
+
+function getStatusClassName(status: InspectionStatus): string {
+  if (status === 'DRAFT' || status === 'DRAFT_OPEN_CORRECTION')
+    return 'font-semibold text-amber-600 dark:text-amber-300'
+  if (status === 'OPEN_CORRECTION')
+    return 'font-semibold text-red-700 dark:text-red-300'
+  return 'font-semibold text-green-700 dark:text-green-300'
 }
 
 function formatDate(dateValue: string): string {
@@ -30,6 +45,9 @@ export function HistoryPage() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [onlyFails, setOnlyFails] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<'ALL' | InspectionStatus>(
+    'ALL',
+  )
   const [selectedInspection, setSelectedInspection] =
     useState<InspectionHistoryEntry | null>(null)
   const [openMenuInspectionId, setOpenMenuInspectionId] = useState<
@@ -85,7 +103,7 @@ export function HistoryPage() {
   }
 
   const handleEdit = (inspection: InspectionHistoryEntry) => {
-    if (inspection.status !== 'DRAFT') {
+    if (inspection.status === 'FINISHED') {
       return
     }
 
@@ -113,6 +131,8 @@ export function HistoryPage() {
       const startMatches = !startDate || inspectionDate >= startDate
       const endMatches = !endDate || inspectionDate <= endDate
       const failsMatches = !onlyFails || hasNonConformity(inspection)
+      const statusMatches =
+        statusFilter === 'ALL' || inspection.status === statusFilter
 
       return (
         projectMatches &&
@@ -120,7 +140,8 @@ export function HistoryPage() {
         locationMatches &&
         startMatches &&
         endMatches &&
-        failsMatches
+        failsMatches &&
+        statusMatches
       )
     })
   }, [
@@ -131,6 +152,7 @@ export function HistoryPage() {
     selectedProject,
     startDate,
     titleFilter,
+    statusFilter,
   ])
 
   return (
@@ -147,7 +169,7 @@ export function HistoryPage() {
 
       <InspectionCalendar inspections={filteredInspections} />
 
-      <section className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 md:grid-cols-2 lg:grid-cols-6">
+      <section className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 md:grid-cols-2 lg:grid-cols-7">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Título
@@ -224,6 +246,27 @@ export function HistoryPage() {
           />
         </div>
 
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Status
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as 'ALL' | InspectionStatus)
+            }
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          >
+            <option value="ALL">Todos</option>
+            <option value="FINISHED">Finalizadas</option>
+            <option value="OPEN_CORRECTION">Aguardando reinspeção</option>
+            <option value="DRAFT">Rascunhos (sem pendência)</option>
+            <option value="DRAFT_OPEN_CORRECTION">
+              Rascunhos com pendência
+            </option>
+          </select>
+        </div>
+
         <label className="flex items-end gap-2 pb-2 text-sm text-gray-700 dark:text-gray-300">
           <input
             type="checkbox"
@@ -250,9 +293,12 @@ export function HistoryPage() {
             <article
               key={inspection.id}
               className={`group relative overflow-visible rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-                inspection.status === 'DRAFT'
+                inspection.status === 'DRAFT' ||
+                inspection.status === 'DRAFT_OPEN_CORRECTION'
                   ? 'border-amber-400/80 bg-white hover:bg-amber-50/70 dark:border-amber-500/70 dark:bg-gray-800 dark:hover:bg-amber-900/25'
-                  : 'border-emerald-400/80 bg-white hover:bg-emerald-50/70 dark:border-emerald-500/70 dark:bg-gray-800 dark:hover:bg-emerald-900/25'
+                  : inspection.status === 'OPEN_CORRECTION'
+                    ? 'border-red-400/80 bg-white hover:bg-red-50/70 dark:border-red-500/70 dark:bg-gray-800 dark:hover:bg-red-900/25'
+                    : 'border-emerald-400/80 bg-white hover:bg-emerald-50/70 dark:border-emerald-500/70 dark:bg-gray-800 dark:hover:bg-emerald-900/25'
               }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -266,14 +312,8 @@ export function HistoryPage() {
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Status:{' '}
-                    <span
-                      className={
-                        inspection.status === 'DRAFT'
-                          ? 'font-semibold text-amber-600 dark:text-amber-300'
-                          : 'font-semibold text-green-700 dark:text-green-300'
-                      }
-                    >
-                      {inspection.status}
+                    <span className={getStatusClassName(inspection.status)}>
+                      {getStatusLabel(inspection.status)}
                     </span>{' '}
                     • Data da inspeção:{' '}
                     {formatDate(inspection.data.header.date)}
@@ -345,7 +385,7 @@ export function HistoryPage() {
                       Ver Detalhes
                     </button>
 
-                    {inspection.status === 'DRAFT' && (
+                    {inspection.status !== 'FINISHED' && (
                       <button
                         type="button"
                         onClick={() => {
@@ -355,7 +395,10 @@ export function HistoryPage() {
                         className="inline-flex items-center gap-2 rounded-md border border-amber-400/70 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/70 dark:text-amber-300 dark:hover:bg-amber-900/30"
                       >
                         <Pencil className="h-4 w-4" />
-                        Editar
+                        {inspection.status === 'OPEN_CORRECTION' ||
+                        inspection.status === 'DRAFT_OPEN_CORRECTION'
+                          ? 'Reinspecionar'
+                          : 'Editar'}
                       </button>
                     )}
 
@@ -401,7 +444,10 @@ export function HistoryPage() {
               Fechar
             </button>
             <div className="h-full overflow-hidden pt-8">
-              <PDFPreview data={selectedInspection.data} />
+              <PDFPreview
+                data={selectedInspection.data}
+                status={selectedInspection.status}
+              />
             </div>
           </div>
         </div>

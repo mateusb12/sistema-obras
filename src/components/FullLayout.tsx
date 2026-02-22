@@ -38,6 +38,7 @@ const NAV_MODULES: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { label: 'Ficha de Inspeção', route: APP_ROUTES.INSPECTION },
       { label: 'Histórico', route: APP_ROUTES.HISTORY },
+      { label: 'Correções', route: APP_ROUTES.CORRECTIONS },
     ],
   },
   {
