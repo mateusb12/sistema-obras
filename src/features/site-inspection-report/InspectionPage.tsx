@@ -92,14 +92,38 @@ export function InspectionPage() {
       return
     }
 
+    const isReinspection =
+      inspection.status === 'OPEN_CORRECTION' ||
+      inspection.status === 'DRAFT_OPEN_CORRECTION'
+
     setEditingInspectionId(inspection.id)
     setEditingBaseStatus(inspection.status)
-    setIsReinspectionMode(
-      inspection.status === 'OPEN_CORRECTION' ||
-        inspection.status === 'DRAFT_OPEN_CORRECTION',
-    )
+    setIsReinspectionMode(isReinspection)
     setChecklistType(inspection.data.inspectionType || 'estrutural')
-    reset(inspection.data)
+
+    let sortedChecklist = inspection.data.checklist || []
+    if (isReinspection) {
+      const getPriority = (item: any) => {
+        if (
+          item.status === 'fail' &&
+          item.failResolution === 'needs_correction'
+        )
+          return 0
+        if (item.status === 'fail') return 1
+        if (item.status === 'ok') return 2
+        return 3
+      }
+
+      sortedChecklist = [...sortedChecklist].sort(
+        (a, b) => getPriority(a) - getPriority(b),
+      )
+    }
+
+    reset({
+      ...inspection.data,
+      checklist: sortedChecklist,
+    })
+
     clearInspectionInEdition()
   }, [reset])
 
