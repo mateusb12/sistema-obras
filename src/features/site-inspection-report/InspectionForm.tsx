@@ -801,7 +801,7 @@ export function InspectionForm({
           onClick={onFinish}
           className="w-full rounded-md bg-blue-600 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-blue-700"
         >
-          Finalizar Inspeção
+          {isReinspectionMode ? 'Finalizar Reinspeção' : 'Finalizar Inspeção'}
         </button>
       </div>
     </div>

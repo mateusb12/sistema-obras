@@ -49,7 +49,7 @@ export function CorrectionsPage() {
       <section className="space-y-3">
         {pendingInspections.length === 0 && (
           <p className="rounded-md border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-            Nenhuma inspeção pendente de correção no momento.
+            Nenhuma inspeção aguardando reinspeção no momento.
           </p>
         )}
 

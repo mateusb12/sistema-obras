@@ -22,7 +22,7 @@ function hasNonConformity(inspection: InspectionHistoryEntry): boolean {
 function getStatusLabel(status: InspectionStatus): string {
   if (status === 'DRAFT' || status === 'DRAFT_OPEN_CORRECTION')
     return 'Rascunho'
-  if (status === 'OPEN_CORRECTION') return 'Pendente de correção'
+  if (status === 'OPEN_CORRECTION') return 'Aguardando reinspeção'
   return 'Finalizada'
 }
 
@@ -259,7 +259,7 @@ export function HistoryPage() {
           >
             <option value="ALL">Todos</option>
             <option value="FINISHED">Finalizadas</option>
-            <option value="OPEN_CORRECTION">Pendentes de correção</option>
+            <option value="OPEN_CORRECTION">Aguardando reinspeção</option>
             <option value="DRAFT">Rascunhos (sem pendência)</option>
             <option value="DRAFT_OPEN_CORRECTION">
               Rascunhos com pendência

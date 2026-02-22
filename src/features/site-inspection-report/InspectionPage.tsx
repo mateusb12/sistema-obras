@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../../auth/useAuth'
 import {
@@ -64,9 +64,10 @@ export function InspectionPage() {
   const [isReinspectionMode, setIsReinspectionMode] = useState(false)
   const [checklistType, setChecklistType] = useState('estrutural')
 
-  const { register, watch, setValue, reset } = useForm<InspectionFormType>({
-    defaultValues: getDefaultValues(),
-  })
+  const { register, watch, getValues, setValue, reset } =
+    useForm<InspectionFormType>({
+      defaultValues: getDefaultValues(),
+    })
 
   const formData = watch()
 
@@ -107,25 +108,23 @@ export function InspectionPage() {
   const handleProjectChange = (projectName: string) =>
     setValue('header.projectName', projectName)
 
-  const pendingCorrectionItems = useMemo(
-    () =>
-      formData.checklist.filter(
-        (item) =>
-          item.status === 'fail' && item.failResolution === 'needs_correction',
-      ),
-    [formData.checklist],
-  )
-
-  const hasInvalidCorrectionData = pendingCorrectionItems.some(
-    (item) => !item.correctionPlan?.trim() || !item.reinspectionDate,
-  )
-
-  const hasFutureReinspectionDate = pendingCorrectionItems.some(
-    (item) => item.reinspectionDate && isFutureDate(item.reinspectionDate),
-  )
-
   const persistInspection = (targetStatus: 'DRAFT' | 'FINISHED') => {
-    if (targetStatus === 'FINISHED' && hasInvalidCorrectionData) {
+    const currentData = getValues()
+
+    const currentPendingItems = currentData.checklist.filter(
+      (item) =>
+        item.status === 'fail' && item.failResolution === 'needs_correction',
+    )
+
+    const currentHasInvalidCorrectionData = currentPendingItems.some(
+      (item) => !item.correctionPlan?.trim() || !item.reinspectionDate,
+    )
+
+    const currentHasFutureReinspectionDate = currentPendingItems.some(
+      (item) => item.reinspectionDate && isFutureDate(item.reinspectionDate),
+    )
+
+    if (targetStatus === 'FINISHED' && currentHasInvalidCorrectionData) {
       setSaveMessageType('error')
       setSaveMessage(
         'Preencha plano de correção e data de reinspeção em todos os itens pendentes.',
@@ -136,8 +135,8 @@ export function InspectionPage() {
 
     if (
       targetStatus === 'FINISHED' &&
-      isInspectionOpenCorrection(formData) &&
-      hasFutureReinspectionDate
+      isInspectionOpenCorrection(currentData) &&
+      currentHasFutureReinspectionDate
     ) {
       setSaveMessageType('error')
       setSaveMessage(
@@ -152,13 +151,13 @@ export function InspectionPage() {
 
     const saved = upsertInspection({
       id: editingInspectionId || undefined,
-      form: formData,
+      form: currentData,
       status: statusForPersistence,
       createdBy: user?.name || 'Usuário não identificado',
     })
 
     const resolvedStatus = deriveInspectionStatus(
-      formData,
+      currentData,
       statusForPersistence,
     )
 
