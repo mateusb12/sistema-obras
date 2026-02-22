@@ -18,7 +18,11 @@ export function CorrectionsPage() {
   const pendingInspections = useMemo(
     () =>
       getSavedInspections()
-        .filter((inspection) => inspection.status === 'OPEN_CORRECTION')
+        .filter(
+          (inspection) =>
+            inspection.status === 'OPEN_CORRECTION' ||
+            inspection.status === 'DRAFT_OPEN_CORRECTION',
+        )
         .sort(
           (a, b) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
@@ -72,6 +76,9 @@ export function CorrectionsPage() {
               <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-300">
                 <Wrench className="h-3.5 w-3.5" />
                 {getPendingItemsCount(inspection)} pendência(s)
+                {inspection.status === 'DRAFT_OPEN_CORRECTION'
+                  ? ' • rascunho'
+                  : ''}
               </span>
             </div>
 

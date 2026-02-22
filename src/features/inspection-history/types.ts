@@ -1,6 +1,10 @@
 import type { InspectionForm } from '../site-inspection-report/types'
 
-export type InspectionStatus = 'DRAFT' | 'FINISHED' | 'OPEN_CORRECTION'
+export type InspectionStatus =
+  | 'DRAFT'
+  | 'DRAFT_OPEN_CORRECTION'
+  | 'FINISHED'
+  | 'OPEN_CORRECTION'
 
 export interface InspectionHistoryEntry {
   id: string

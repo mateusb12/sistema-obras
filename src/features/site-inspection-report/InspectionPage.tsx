@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../../auth/useAuth'
 import {
@@ -8,6 +8,7 @@ import {
   getInspectionInEditionId,
   isInspectionOpenCorrection,
   upsertInspection,
+  type InspectionStatus,
 } from '../inspection-history'
 import { InspectionForm } from './InspectionForm'
 import { PDFPreview } from './PDFPreview'
@@ -17,7 +18,6 @@ import { CHECKLIST_ESTRUTURAL, CHECKLIST_NAO_ESTRUTURAL } from './constants.ts'
 function getDefaultValues(): InspectionFormType {
   return {
     inspectionType: 'estrutural',
-
     header: {
       title: 'Inspeção 104-B',
       projectName: 'Flamboyant II',
@@ -25,9 +25,7 @@ function getDefaultValues(): InspectionFormType {
       date: new Date().toISOString().split('T')[0],
       inspectorName: 'Rafael Bruno',
     },
-
     team: [],
-
     checklist: CHECKLIST_ESTRUTURAL.map((item) => ({
       id: crypto.randomUUID(),
       category: item.category,
@@ -39,10 +37,17 @@ function getDefaultValues(): InspectionFormType {
       failReason: '',
       failResolution: null,
       correctionPlan: undefined,
+      reinspectionDate: undefined,
     })),
-
     observations: '',
   }
+}
+
+function isFutureDate(value: string): boolean {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(`${value}T00:00:00`)
+  return target.getTime() > today.getTime()
 }
 
 export function InspectionPage() {
@@ -54,8 +59,11 @@ export function InspectionPage() {
   const [editingInspectionId, setEditingInspectionId] = useState<string | null>(
     null,
   )
+  const [editingBaseStatus, setEditingBaseStatus] =
+    useState<InspectionStatus>('DRAFT')
   const [isReinspectionMode, setIsReinspectionMode] = useState(false)
   const [checklistType, setChecklistType] = useState('estrutural')
+
   const { register, watch, setValue, reset } = useForm<InspectionFormType>({
     defaultValues: getDefaultValues(),
   })
@@ -64,81 +72,117 @@ export function InspectionPage() {
 
   useEffect(() => {
     const inspectionId = getInspectionInEditionId()
+    if (!inspectionId) return
 
-    if (!inspectionId) {
+    const inspection = getInspectionById(inspectionId)
+    if (!inspection) {
+      clearInspectionInEdition()
       return
     }
 
-    const inspection = getInspectionById(inspectionId)
-
     if (
-      !inspection ||
-      (inspection.status !== 'DRAFT' && inspection.status !== 'OPEN_CORRECTION')
+      inspection.status !== 'DRAFT' &&
+      inspection.status !== 'DRAFT_OPEN_CORRECTION' &&
+      inspection.status !== 'OPEN_CORRECTION'
     ) {
       clearInspectionInEdition()
       return
     }
 
     setEditingInspectionId(inspection.id)
-    setIsReinspectionMode(inspection.status === 'OPEN_CORRECTION')
+    setEditingBaseStatus(inspection.status)
+    setIsReinspectionMode(
+      inspection.status === 'OPEN_CORRECTION' ||
+        inspection.status === 'DRAFT_OPEN_CORRECTION',
+    )
     setChecklistType(inspection.data.inspectionType || 'estrutural')
     reset(inspection.data)
     clearInspectionInEdition()
   }, [reset])
 
-  const handleTeamChange = (team: InspectionFormType['team']) => {
+  const handleTeamChange = (team: InspectionFormType['team']) =>
     setValue('team', team)
-  }
-
-  const handleChecklistChange = (
-    checklist: InspectionFormType['checklist'],
-  ) => {
+  const handleChecklistChange = (checklist: InspectionFormType['checklist']) =>
     setValue('checklist', checklist)
-  }
-
-  const handleProjectChange = (projectName: string) => {
+  const handleProjectChange = (projectName: string) =>
     setValue('header.projectName', projectName)
-  }
 
-  const hasInvalidCorrectionPlan = formData.checklist.some(
-    (item) =>
-      item.status === 'fail' &&
-      item.failResolution === 'needs_correction' &&
-      !item.correctionPlan?.trim(),
+  const pendingCorrectionItems = useMemo(
+    () =>
+      formData.checklist.filter(
+        (item) =>
+          item.status === 'fail' && item.failResolution === 'needs_correction',
+      ),
+    [formData.checklist],
   )
 
-  const persistInspection = (status: 'DRAFT' | 'FINISHED') => {
-    if (status === 'FINISHED' && hasInvalidCorrectionPlan) {
+  const hasInvalidCorrectionData = pendingCorrectionItems.some(
+    (item) => !item.correctionPlan?.trim() || !item.reinspectionDate,
+  )
+
+  const hasFutureReinspectionDate = pendingCorrectionItems.some(
+    (item) => item.reinspectionDate && isFutureDate(item.reinspectionDate),
+  )
+
+  const persistInspection = (targetStatus: 'DRAFT' | 'FINISHED') => {
+    if (targetStatus === 'FINISHED' && hasInvalidCorrectionData) {
       setSaveMessageType('error')
       setSaveMessage(
-        'Preencha o plano de correção em todos os itens com “Solicitar correção”.',
+        'Preencha plano de correção e data de reinspeção em todos os itens pendentes.',
       )
       window.setTimeout(() => setSaveMessage(''), 3500)
       return
     }
 
+    if (
+      targetStatus === 'FINISHED' &&
+      isInspectionOpenCorrection(formData) &&
+      hasFutureReinspectionDate
+    ) {
+      setSaveMessageType('error')
+      setSaveMessage(
+        'A ficha só pode ser finalizada após a data de reinspeção dos itens pendentes.',
+      )
+      window.setTimeout(() => setSaveMessage(''), 4000)
+      return
+    }
+
+    const statusForPersistence: InspectionStatus =
+      targetStatus === 'DRAFT' ? editingBaseStatus : 'FINISHED'
+
     const saved = upsertInspection({
       id: editingInspectionId || undefined,
       form: formData,
-      status,
+      status: statusForPersistence,
       createdBy: user?.name || 'Usuário não identificado',
     })
 
-    const derivedStatus = deriveInspectionStatus(formData, status)
+    const resolvedStatus = deriveInspectionStatus(
+      formData,
+      statusForPersistence,
+    )
 
-    setEditingInspectionId(status === 'DRAFT' ? saved.id : null)
+    setEditingInspectionId(saved.id)
+    setEditingBaseStatus(resolvedStatus)
+    setIsReinspectionMode(
+      resolvedStatus === 'OPEN_CORRECTION' ||
+        resolvedStatus === 'DRAFT_OPEN_CORRECTION',
+    )
+
     setSaveMessageType('success')
     setSaveMessage(
-      status === 'DRAFT'
+      targetStatus === 'DRAFT'
         ? 'Rascunho salvo com sucesso!'
-        : derivedStatus === 'OPEN_CORRECTION'
-          ? 'Inspeção salva como pendente de correção.'
+        : resolvedStatus === 'OPEN_CORRECTION'
+          ? 'Inspeção marcada como não-conforme (pendente de reinspeção).'
           : 'Inspeção finalizada com sucesso!',
     )
 
-    if (status === 'FINISHED' && !isInspectionOpenCorrection(formData)) {
+    if (resolvedStatus === 'FINISHED') {
       reset(getDefaultValues())
       setChecklistType('estrutural')
+      setEditingInspectionId(null)
+      setEditingBaseStatus('DRAFT')
       setIsReinspectionMode(false)
       clearInspectionInEdition()
     }
@@ -163,6 +207,7 @@ export function InspectionPage() {
         failReason: '',
         failResolution: null,
         correctionPlan: undefined,
+        reinspectionDate: undefined,
       })),
     )
   }
@@ -206,7 +251,10 @@ export function InspectionPage() {
 
       <div className="mt-6 block min-h-0 overflow-y-auto overflow-x-auto lg:mt-0">
         <div className="mx-auto min-w-[600px]">
-          <PDFPreview data={formData} />
+          <PDFPreview
+            data={formData}
+            status={deriveInspectionStatus(formData, editingBaseStatus)}
+          />
         </div>
       </div>
     </div>

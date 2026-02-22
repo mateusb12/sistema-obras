@@ -48,11 +48,13 @@ export function deriveInspectionStatus(
   form: InspectionForm,
   currentStatus?: InspectionStatus,
 ): InspectionStatus {
-  if (currentStatus === 'DRAFT') {
-    return 'DRAFT'
+  const hasPendingCorrection = isInspectionOpenCorrection(form)
+
+  if (currentStatus === 'DRAFT' || currentStatus === 'DRAFT_OPEN_CORRECTION') {
+    return hasPendingCorrection ? 'DRAFT_OPEN_CORRECTION' : 'DRAFT'
   }
 
-  return isInspectionOpenCorrection(form) ? 'OPEN_CORRECTION' : 'FINISHED'
+  return hasPendingCorrection ? 'OPEN_CORRECTION' : 'FINISHED'
 }
 
 function normalizeForm(form: InspectionForm): InspectionForm {
@@ -62,6 +64,7 @@ function normalizeForm(form: InspectionForm): InspectionForm {
       ...item,
       failResolution: item.failResolution ?? null,
       correctionPlan: item.correctionPlan?.trim() || undefined,
+      reinspectionDate: item.reinspectionDate || undefined,
     })),
   }
 }
@@ -105,7 +108,15 @@ function normalizeEntry(
     createdAt,
     updatedAt: entry.updatedAt || createdAt,
     createdBy: entry.createdBy || 'Usuário não identificado',
-    status: deriveInspectionStatus(normalizedData, entry.status),
+    status: deriveInspectionStatus(
+      normalizedData,
+      entry.status === 'DRAFT' ||
+        entry.status === 'DRAFT_OPEN_CORRECTION' ||
+        entry.status === 'FINISHED' ||
+        entry.status === 'OPEN_CORRECTION'
+        ? entry.status
+        : 'FINISHED',
+    ),
     data: normalizedData,
     searchIndex: entry.searchIndex || buildSearchIndex(normalizedData),
   }
@@ -162,6 +173,12 @@ function buildRandomInspection(): InspectionHistoryEntry {
 
       checklist: checklistSource.map((item) => {
         const status = randomStatus()
+        const failResolution = status === 'fail' ? randomResolution() : null
+        const reinspectionDate =
+          failResolution === 'needs_correction'
+            ? randomDateInCurrentMonth()
+            : undefined
+
         return {
           id: crypto.randomUUID(),
           category: item.category,
@@ -171,7 +188,12 @@ function buildRandomInspection(): InspectionHistoryEntry {
           inspectionMethod: item.inspectionMethod,
           status,
           failReason: status === 'fail' ? randomFailReason() : '',
-          failResolution: status === 'fail' ? randomResolution() : null,
+          failResolution,
+          correctionPlan:
+            failResolution === 'needs_correction'
+              ? 'Equipe de acabamento irá corrigir o item e validar alinhamento.'
+              : undefined,
+          reinspectionDate,
         }
       }),
 

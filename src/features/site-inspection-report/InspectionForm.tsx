@@ -140,6 +140,7 @@ export function InspectionForm({
           failReason: '',
           failResolution: null,
           correctionPlan: undefined,
+          reinspectionDate: undefined,
         },
       ])
       setNewItem({
@@ -174,6 +175,7 @@ export function InspectionForm({
           failReason: '',
           failResolution: null,
           correctionPlan: undefined,
+          reinspectionDate: undefined,
         }
       }),
     )
@@ -204,6 +206,10 @@ export function InspectionForm({
             failResolution === 'needs_correction'
               ? item.correctionPlan || ''
               : undefined,
+          reinspectionDate:
+            failResolution === 'needs_correction'
+              ? item.reinspectionDate || ''
+              : undefined,
         }
 
         if (failResolution === 'needs_correction') {
@@ -219,6 +225,17 @@ export function InspectionForm({
     onChecklistChange(
       checklist.map((item) =>
         item.id === id ? { ...item, correctionPlan } : item,
+      ),
+    )
+  }
+
+  const handleReinspectionDateChange = (
+    id: string,
+    reinspectionDate: string,
+  ) => {
+    onChecklistChange(
+      checklist.map((item) =>
+        item.id === id ? { ...item, reinspectionDate } : item,
       ),
     )
   }
@@ -598,20 +615,40 @@ export function InspectionForm({
                     </button>
                   </div>
                   {isItemPendingCorrection(item) && (
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-red-800 dark:text-red-300">
-                        Como será corrigido?
-                      </label>
-                      <textarea
-                        value={item.correctionPlan || ''}
-                        onChange={(e) =>
-                          handleCorrectionPlanChange(item.id, e.target.value)
-                        }
-                        rows={3}
-                        disabled={!isItemEditable(item)}
-                        className={INPUT_CLASS}
-                        placeholder="Descreva o plano de correção..."
-                      />
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-red-800 dark:text-red-300">
+                          Como será corrigido?
+                        </label>
+                        <textarea
+                          value={item.correctionPlan || ''}
+                          onChange={(e) =>
+                            handleCorrectionPlanChange(item.id, e.target.value)
+                          }
+                          rows={3}
+                          disabled={!isItemEditable(item)}
+                          className={INPUT_CLASS}
+                          placeholder="Descreva o plano de correção..."
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-red-800 dark:text-red-300">
+                          Data da reinspeção
+                        </label>
+                        <input
+                          type="date"
+                          value={item.reinspectionDate || ''}
+                          onChange={(e) =>
+                            handleReinspectionDateChange(
+                              item.id,
+                              e.target.value,
+                            )
+                          }
+                          disabled={!isItemEditable(item)}
+                          className={`${INPUT_CLASS} dark:[color-scheme:dark]`}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>

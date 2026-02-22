@@ -154,7 +154,8 @@ export function InspectionPDFDocument({ data, status }: PDFDocumentProps) {
           <View style={styles.logoContainer}>
             <Image src={logoUrl} style={styles.logo} />
           </View>
-          {status === 'OPEN_CORRECTION' && (
+          {(status === 'OPEN_CORRECTION' ||
+            status === 'DRAFT_OPEN_CORRECTION') && (
             <Text style={styles.pendingBadge}>PENDENTE DE CORREÇÃO</Text>
           )}
           <Text style={styles.title}>Relatório de Inspeção Digital</Text>
@@ -236,7 +237,7 @@ export function InspectionPDFDocument({ data, status }: PDFDocumentProps) {
                 const resolutionText =
                   item.status === 'fail'
                     ? item.failResolution === 'needs_correction'
-                      ? `Solicitar correção${item.correctionPlan?.trim() ? ` — Plano: ${item.correctionPlan.trim()}` : ''}`
+                      ? `Solicitar correção${item.correctionPlan?.trim() ? ` — Plano: ${item.correctionPlan.trim()}` : ''}${item.reinspectionDate ? ` — Reinspeção: ${item.reinspectionDate}` : ''}`
                       : item.failResolution === 'non_conform'
                         ? 'Aceitar como está'
                         : '-'

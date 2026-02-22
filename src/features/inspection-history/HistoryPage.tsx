@@ -20,13 +20,14 @@ function hasNonConformity(inspection: InspectionHistoryEntry): boolean {
 }
 
 function getStatusLabel(status: InspectionStatus): string {
-  if (status === 'DRAFT') return 'Rascunho'
+  if (status === 'DRAFT' || status === 'DRAFT_OPEN_CORRECTION')
+    return 'Rascunho'
   if (status === 'OPEN_CORRECTION') return 'Pendente de correção'
   return 'Finalizada'
 }
 
 function getStatusClassName(status: InspectionStatus): string {
-  if (status === 'DRAFT')
+  if (status === 'DRAFT' || status === 'DRAFT_OPEN_CORRECTION')
     return 'font-semibold text-amber-600 dark:text-amber-300'
   if (status === 'OPEN_CORRECTION')
     return 'font-semibold text-red-700 dark:text-red-300'
@@ -259,7 +260,10 @@ export function HistoryPage() {
             <option value="ALL">Todos</option>
             <option value="FINISHED">Finalizadas</option>
             <option value="OPEN_CORRECTION">Pendentes de correção</option>
-            <option value="DRAFT">Rascunhos</option>
+            <option value="DRAFT">Rascunhos (sem pendência)</option>
+            <option value="DRAFT_OPEN_CORRECTION">
+              Rascunhos com pendência
+            </option>
           </select>
         </div>
 
@@ -289,7 +293,8 @@ export function HistoryPage() {
             <article
               key={inspection.id}
               className={`group relative overflow-visible rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-                inspection.status === 'DRAFT'
+                inspection.status === 'DRAFT' ||
+                inspection.status === 'DRAFT_OPEN_CORRECTION'
                   ? 'border-amber-400/80 bg-white hover:bg-amber-50/70 dark:border-amber-500/70 dark:bg-gray-800 dark:hover:bg-amber-900/25'
                   : inspection.status === 'OPEN_CORRECTION'
                     ? 'border-red-400/80 bg-white hover:bg-red-50/70 dark:border-red-500/70 dark:bg-gray-800 dark:hover:bg-red-900/25'
@@ -390,7 +395,8 @@ export function HistoryPage() {
                         className="inline-flex items-center gap-2 rounded-md border border-amber-400/70 px-3 py-1.5 text-sm font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/70 dark:text-amber-300 dark:hover:bg-amber-900/30"
                       >
                         <Pencil className="h-4 w-4" />
-                        {inspection.status === 'OPEN_CORRECTION'
+                        {inspection.status === 'OPEN_CORRECTION' ||
+                        inspection.status === 'DRAFT_OPEN_CORRECTION'
                           ? 'Reinspecionar'
                           : 'Editar'}
                       </button>
