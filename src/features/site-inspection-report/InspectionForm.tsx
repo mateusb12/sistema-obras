@@ -261,6 +261,93 @@ export function InspectionForm({
         </h2>
 
         <div>
+          <div className="mb-6">
+            <div
+              className="rounded-lg border-2 border-blue-300 bg-blue-50/70 p-4
+               dark:border-blue-700 dark:bg-blue-900/20 shadow-sm"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <ShieldCheck
+                  size={18}
+                  className="text-blue-600 dark:text-blue-300"
+                />
+                <label className="text-sm font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wide">
+                  Tipo de Inspeção
+                </label>
+              </div>
+
+              <div className="flex rounded-lg overflow-hidden border-2 border-blue-400 dark:border-blue-600">
+                <button
+                  type="button"
+                  onClick={() => onChecklistTypeChange('estrutural')}
+                  className={`
+          flex-1 py-3 px-4 text-sm font-semibold transition-all
+          flex items-center justify-center gap-2
+          ${
+            selectedChecklistType === 'estrutural'
+              ? 'bg-blue-600 text-white shadow-inner'
+              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+          }
+        `}
+                >
+                  <span>Alvenaria Estrutural</span>
+
+                  {selectedChecklistType === 'estrutural' && (
+                    <span
+                      className={`
+              text-xs px-2 py-0.5 rounded-full font-semibold
+              ${
+                checkedCount === checklist.length && checklist.length > 0
+                  ? 'bg-green-500 text-white'
+                  : 'bg-white/20 text-white'
+              }
+            `}
+                    >
+                      {checkedCount}/{checklist.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onChecklistTypeChange('nao_estrutural')}
+                  className={`
+          flex-1 py-3 px-4 text-sm font-semibold transition-all
+          border-l border-blue-300 dark:border-blue-700
+          flex items-center justify-center gap-2
+          ${
+            selectedChecklistType === 'nao_estrutural'
+              ? 'bg-blue-600 text-white shadow-inner'
+              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+          }
+        `}
+                >
+                  <span>Alvenaria Não Estrutural</span>
+
+                  {selectedChecklistType === 'nao_estrutural' && (
+                    <span
+                      className={`
+              text-xs px-2 py-0.5 rounded-full font-semibold
+              ${
+                checkedCount === checklist.length && checklist.length > 0
+                  ? 'bg-green-500 text-white'
+                  : 'bg-white/20 text-white'
+              }
+            `}
+                    >
+                      {checkedCount}/{checklist.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              <input
+                type="hidden"
+                {...register('inspectionType')}
+                value={selectedChecklistType}
+              />
+            </div>
+          </div>
           <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
             Selecione o Projeto
           </label>
@@ -437,27 +524,6 @@ export function InspectionForm({
       </div>
 
       <hr className="border-gray-200 dark:border-gray-700" />
-
-      <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-          Tipo de Alvenaria
-        </label>
-
-        <select
-          className={INPUT_CLASS}
-          value={selectedChecklistType}
-          onChange={(e) => onChecklistTypeChange(e.target.value)}
-        >
-          <option value="estrutural">Alvenaria Estrutural</option>
-          <option value="nao_estrutural">Alvenaria Não Estrutural</option>
-        </select>
-
-        <input
-          type="hidden"
-          {...register('inspectionType')}
-          value={selectedChecklistType}
-        />
-      </div>
 
       <hr className="border-gray-200 dark:border-gray-700" />
 
