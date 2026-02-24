@@ -264,7 +264,7 @@ export function InspectionForm({
           <div className="mb-6">
             <div
               className="rounded-lg border-2 border-blue-300 bg-blue-50/70 p-4
-               dark:border-blue-700 dark:bg-blue-900/20 shadow-sm"
+    dark:border-blue-700 dark:bg-blue-900/20 shadow-sm"
             >
               <div className="flex items-center gap-2 mb-3">
                 <ShieldCheck
@@ -282,7 +282,7 @@ export function InspectionForm({
                   onClick={() => onChecklistTypeChange('estrutural')}
                   className={`
           flex-1 py-3 px-4 text-sm font-semibold transition-all
-          flex items-center justify-center gap-2
+          flex flex-col items-center justify-center gap-1
           ${
             selectedChecklistType === 'estrutural'
               ? 'bg-blue-600 text-white shadow-inner'
@@ -314,7 +314,7 @@ export function InspectionForm({
                   className={`
           flex-1 py-3 px-4 text-sm font-semibold transition-all
           border-l border-blue-300 dark:border-blue-700
-          flex items-center justify-center gap-2
+          flex flex-col items-center justify-center gap-1
           ${
             selectedChecklistType === 'nao_estrutural'
               ? 'bg-blue-600 text-white shadow-inner'
@@ -325,6 +325,38 @@ export function InspectionForm({
                   <span>Alvenaria Não Estrutural</span>
 
                   {selectedChecklistType === 'nao_estrutural' && (
+                    <span
+                      className={`
+              text-xs px-2 py-0.5 rounded-full font-semibold
+              ${
+                checkedCount === checklist.length && checklist.length > 0
+                  ? 'bg-green-500 text-white'
+                  : 'bg-white/20 text-white'
+              }
+            `}
+                    >
+                      {checkedCount}/{checklist.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onChecklistTypeChange('contrapiso')}
+                  className={`
+          flex-1 py-3 px-4 text-sm font-semibold transition-all
+          border-l border-blue-300 dark:border-blue-700
+          flex flex-col items-center justify-center gap-1
+          ${
+            selectedChecklistType === 'contrapiso'
+              ? 'bg-blue-600 text-white shadow-inner'
+              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+          }
+        `}
+                >
+                  <span>Contrapiso</span>
+
+                  {selectedChecklistType === 'contrapiso' && (
                     <span
                       className={`
               text-xs px-2 py-0.5 rounded-full font-semibold

@@ -13,7 +13,11 @@ import {
 import { InspectionForm } from './InspectionForm'
 import { PDFPreview } from './PDFPreview'
 import type { InspectionForm as InspectionFormType } from './types'
-import { CHECKLIST_ESTRUTURAL, CHECKLIST_NAO_ESTRUTURAL } from './constants.ts'
+import {
+  CHECKLIST_CONTRAPISO,
+  CHECKLIST_ESTRUTURAL,
+  CHECKLIST_NAO_ESTRUTURAL,
+} from './constants.ts'
 import { useToast } from '../toast/Toast.tsx'
 
 function getDefaultValues(): InspectionFormType {
@@ -64,7 +68,9 @@ export function InspectionPage() {
   const [editingBaseStatus, setEditingBaseStatus] =
     useState<InspectionStatus>('DRAFT')
   const [isReinspectionMode, setIsReinspectionMode] = useState(false)
-  const [checklistType, setChecklistType] = useState('estrutural')
+  const [checklistType, setChecklistType] = useState<
+    'estrutural' | 'nao_estrutural' | 'contrapiso'
+  >('estrutural')
   const [editableItemIds, setEditableItemIds] = useState<Set<string>>(new Set())
 
   const { register, watch, getValues, setValue, reset } =
@@ -229,7 +235,11 @@ export function InspectionPage() {
 
   const loadChecklist = (type: string) => {
     const base =
-      type === 'estrutural' ? CHECKLIST_ESTRUTURAL : CHECKLIST_NAO_ESTRUTURAL
+      type === 'estrutural'
+        ? CHECKLIST_ESTRUTURAL
+        : type === 'nao_estrutural'
+          ? CHECKLIST_NAO_ESTRUTURAL
+          : CHECKLIST_CONTRAPISO
 
     setValue(
       'checklist',
@@ -249,9 +259,11 @@ export function InspectionPage() {
     )
   }
 
-  const handleChecklistTypeChange = (type: string) => {
+  const handleChecklistTypeChange = (
+    type: 'estrutural' | 'nao_estrutural' | 'contrapiso',
+  ) => {
     setChecklistType(type)
-    setValue('inspectionType', type as 'estrutural' | 'nao_estrutural')
+    setValue('inspectionType', type)
     loadChecklist(type)
   }
 

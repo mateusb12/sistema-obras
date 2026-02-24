@@ -192,3 +192,35 @@ export const CHECKLIST_NAO_ESTRUTURAL = [
     inspectionMethod: 'Inspeção visual',
   },
 ]
+
+export const CHECKLIST_CONTRAPISO = [
+  {
+    category: 'Contrapiso',
+    description: 'Espessura do contrapiso',
+    acceptanceCriteria:
+      'Entre 4 cm a 8 cm, ou conforme especificado pelo responsável pela obra',
+    sampling: '100%',
+    inspectionMethod: 'Trena / Mangueira de nível ou laser',
+  },
+  {
+    category: 'Contrapiso',
+    description: 'Caimento das áreas molhadas',
+    acceptanceCriteria: 'Caimento mínimo de até 1 cm',
+    sampling: '100%',
+    inspectionMethod: 'Mangueira de nível ou laser / trena / teste com água',
+  },
+  {
+    category: 'Contrapiso',
+    description: 'Resistência do piso',
+    acceptanceCriteria: 'Sem desplacamento e/ou baixa resistência',
+    sampling: '100%',
+    inspectionMethod: 'Martelo de borracha ou cabo de vassoura',
+  },
+  {
+    category: 'Contrapiso',
+    description: 'Acabamento',
+    acceptanceCriteria: 'Ausência de trincas, fissuras e/ou ondulações',
+    sampling: '100%',
+    inspectionMethod: 'Inspeção visual',
+  },
+]
