@@ -16,6 +16,7 @@ export interface ChecklistItem {
   failResolution: 'non_conform' | 'needs_correction' | null
   correctionPlan?: string
   reinspectionDate?: string
+  reinspectionResult?: 'effective' | 'ineffective' | null
 }
 
 export interface ProjectHeader {

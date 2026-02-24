@@ -40,7 +40,9 @@ function randomResolution(): 'non_conform' | 'needs_correction' {
 export function isInspectionOpenCorrection(form: InspectionForm): boolean {
   return form.checklist.some(
     (item) =>
-      item.status === 'fail' && item.failResolution === 'needs_correction',
+      item.status === 'fail' &&
+      item.failResolution === 'needs_correction' &&
+      item.reinspectionResult !== 'effective',
   )
 }
 
@@ -65,6 +67,7 @@ function normalizeForm(form: InspectionForm): InspectionForm {
       failResolution: item.failResolution ?? null,
       correctionPlan: item.correctionPlan?.trim() || undefined,
       reinspectionDate: item.reinspectionDate || undefined,
+      reinspectionResult: item.reinspectionResult ?? null,
     })),
   }
 }
@@ -193,6 +196,7 @@ function buildRandomInspection(): InspectionHistoryEntry {
               ? 'Equipe de acabamento irá corrigir o item e validar alinhamento.'
               : undefined,
           reinspectionDate,
+          reinspectionResult: null,
         }
       }),
 

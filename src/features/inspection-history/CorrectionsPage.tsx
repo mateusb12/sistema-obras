@@ -10,7 +10,9 @@ import type { InspectionHistoryEntry } from './types'
 function getPendingItemsCount(inspection: InspectionHistoryEntry): number {
   return inspection.data.checklist.filter(
     (item) =>
-      item.status === 'fail' && item.failResolution === 'needs_correction',
+      item.status === 'fail' &&
+      item.failResolution === 'needs_correction' &&
+      item.reinspectionResult !== 'effective',
   ).length
 }
 

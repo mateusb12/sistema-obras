@@ -234,10 +234,17 @@ export function InspectionPDFDocument({ data, status }: PDFDocumentProps) {
                 const detailText =
                   item.status === 'fail' ? item.failReason || '-' : '-'
 
+                const reinspectionText =
+                  item.reinspectionResult === 'effective'
+                    ? ' — Correção validada'
+                    : item.reinspectionResult === 'ineffective'
+                      ? ' — Correção rejeitada'
+                      : ''
+
                 const resolutionText =
                   item.status === 'fail'
                     ? item.failResolution === 'needs_correction'
-                      ? `Solicitar correção${item.correctionPlan?.trim() ? ` — Plano: ${item.correctionPlan.trim()}` : ''}${item.reinspectionDate ? ` — Reinspeção: ${item.reinspectionDate}` : ''}`
+                      ? `Solicitar correção${item.correctionPlan?.trim() ? ` — Plano: ${item.correctionPlan.trim()}` : ''}${item.reinspectionDate ? ` — Reinspeção: ${item.reinspectionDate}` : ''}${reinspectionText}`
                       : item.failResolution === 'non_conform'
                         ? 'Aceitar como está'
                         : '-'
