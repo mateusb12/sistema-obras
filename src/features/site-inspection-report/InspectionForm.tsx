@@ -55,8 +55,8 @@ interface InspectionFormProps {
   onFinish: () => void
   isEditing: boolean
 
-  selectedChecklistType: string
-  onChecklistTypeChange: (type: string) => void
+  selectedChecklistType: InspectionFormType['inspectionType']
+  onChecklistTypeChange: (type: InspectionFormType['inspectionType']) => void
   isReinspectionMode: boolean
   editableItemIds: Set<string>
 }
