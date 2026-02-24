@@ -43,6 +43,7 @@ function getDefaultValues(): InspectionFormType {
       failResolution: null,
       correctionPlan: undefined,
       reinspectionDate: undefined,
+      reinspectionResult: null,
     })),
     observations: '',
   }
@@ -123,7 +124,8 @@ export function InspectionPage() {
           .filter(
             (item) =>
               item.status === 'fail' &&
-              item.failResolution === 'needs_correction',
+              item.failResolution === 'needs_correction' &&
+              item.reinspectionResult !== 'effective',
           )
           .map((item) => item.id),
       )
@@ -132,7 +134,8 @@ export function InspectionPage() {
       const getPriority = (item: any) => {
         if (
           item.status === 'fail' &&
-          item.failResolution === 'needs_correction'
+          item.failResolution === 'needs_correction' &&
+          item.reinspectionResult !== 'effective'
         )
           return 0
         if (item.status === 'fail') return 1
@@ -167,7 +170,9 @@ export function InspectionPage() {
 
     const pendingItems = currentData.checklist.filter(
       (item) =>
-        item.status === 'fail' && item.failResolution === 'needs_correction',
+        item.status === 'fail' &&
+        item.failResolution === 'needs_correction' &&
+        item.reinspectionResult !== 'effective',
     )
 
     if (targetStatus === 'FINISHED') {
@@ -255,6 +260,7 @@ export function InspectionPage() {
         failResolution: null,
         correctionPlan: undefined,
         reinspectionDate: undefined,
+        reinspectionResult: null,
       })),
     )
   }
