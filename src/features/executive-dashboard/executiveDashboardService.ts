@@ -9,6 +9,7 @@ import type {
   DesperdicioRiskData,
   ComplianceRiskData,
   RiscoClassificacao,
+  InspectionType,
 } from './types'
 import { getSavedInspections } from '../inspection-history'
 
@@ -80,19 +81,23 @@ export function getChecklistStats() {
       total: number
       pass: number
       fail: number
-      typeCounts: { estrutural: number; nao_estrutural: number }
+      typeCounts: Record<InspectionType, number>
     }
   > = {}
 
   for (const insp of inspections) {
-    const type = insp.data.inspectionType || 'estrutural'
+    const type: InspectionType = insp.data.inspectionType ?? 'estrutural'
 
     for (const item of insp.data.checklist) {
       const key = `${type}-${item.description}`
 
       if (!stats[key]) {
         const labelTipo =
-          type === 'estrutural' ? 'estrutural' : 'não-estrutural'
+          type === 'estrutural'
+            ? 'estrutural'
+            : type === 'nao_estrutural'
+              ? 'não-estrutural'
+              : 'contrapiso'
 
         stats[key] = {
           category: `${item.category} ${labelTipo}`,
@@ -100,7 +105,11 @@ export function getChecklistStats() {
           total: 0,
           pass: 0,
           fail: 0,
-          typeCounts: { estrutural: 0, nao_estrutural: 0 },
+          typeCounts: {
+            estrutural: 0,
+            nao_estrutural: 0,
+            contrapiso: 0,
+          },
         }
       }
 

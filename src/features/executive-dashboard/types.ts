@@ -51,3 +51,5 @@ export type ExecutiveDashboardData = {
   riscoGeral: RiscoGeralData
   tendenciaMensal: TrendPoint[]
 }
+
+export type InspectionType = 'estrutural' | 'nao_estrutural' | 'contrapiso'
