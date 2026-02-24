@@ -33,6 +33,12 @@ const ROLE_OPTIONS = [
   'Auxiliar',
 ]
 
+const INSPECTION_TABS = [
+  { id: 'estrutural', label: 'Alvenaria Estrutural' },
+  { id: 'nao_estrutural', label: 'Alvenaria Não Estrutural' },
+  { id: 'contrapiso', label: 'Contrapiso' },
+] as const
+
 const INPUT_CLASS =
   'w-full px-3 py-2 border rounded-md text-gray-900 dark:text-white bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors'
 
@@ -262,10 +268,7 @@ export function InspectionForm({
 
         <div>
           <div className="mb-6">
-            <div
-              className="rounded-lg border-2 border-blue-300 bg-blue-50/70 p-4
-    dark:border-blue-700 dark:bg-blue-900/20 shadow-sm"
-            >
+            <div className="rounded-lg border-2 border-blue-300 bg-blue-50/70 p-4 dark:border-blue-700 dark:bg-blue-900/20 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <ShieldCheck
                   size={18}
@@ -277,100 +280,43 @@ export function InspectionForm({
               </div>
 
               <div className="flex rounded-lg overflow-hidden border-2 border-blue-400 dark:border-blue-600">
-                <button
-                  type="button"
-                  onClick={() => onChecklistTypeChange('estrutural')}
-                  className={`
-          flex-1 py-3 px-4 text-sm font-semibold transition-all
-          flex flex-col items-center justify-center gap-1
-          ${
-            selectedChecklistType === 'estrutural'
-              ? 'bg-blue-600 text-white shadow-inner'
-              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-          }
-        `}
-                >
-                  <span>Alvenaria Estrutural</span>
+                {INSPECTION_TABS.map((tab) => {
+                  const isSelected = selectedChecklistType === tab.id
+                  const isFinished =
+                    checkedCount === checklist.length && checklist.length > 0
 
-                  {selectedChecklistType === 'estrutural' && (
-                    <span
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => onChecklistTypeChange(tab.id)}
                       className={`
-              text-xs px-2 py-0.5 rounded-full font-semibold
-              ${
-                checkedCount === checklist.length && checklist.length > 0
-                  ? 'bg-green-500 text-white'
-                  : 'bg-white/20 text-white'
-              }
-            `}
+                        flex-1 py-3 px-2 text-sm font-semibold transition-all
+                        flex flex-col items-center justify-start gap-2
+                        border-r border-blue-300 dark:border-blue-700 last:border-r-0
+                        ${
+                          isSelected
+                            ? 'bg-blue-600 text-white shadow-inner'
+                            : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                        }
+                      `}
                     >
-                      {checkedCount}/{checklist.length}
-                    </span>
-                  )}
-                </button>
+                      <span className="flex items-center justify-center min-h-[2.5rem] text-center leading-tight">
+                        {tab.label}
+                      </span>
 
-                <button
-                  type="button"
-                  onClick={() => onChecklistTypeChange('nao_estrutural')}
-                  className={`
-          flex-1 py-3 px-4 text-sm font-semibold transition-all
-          border-l border-blue-300 dark:border-blue-700
-          flex flex-col items-center justify-center gap-1
-          ${
-            selectedChecklistType === 'nao_estrutural'
-              ? 'bg-blue-600 text-white shadow-inner'
-              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-          }
-        `}
-                >
-                  <span>Alvenaria Não Estrutural</span>
-
-                  {selectedChecklistType === 'nao_estrutural' && (
-                    <span
-                      className={`
-              text-xs px-2 py-0.5 rounded-full font-semibold
-              ${
-                checkedCount === checklist.length && checklist.length > 0
-                  ? 'bg-green-500 text-white'
-                  : 'bg-white/20 text-white'
-              }
-            `}
-                    >
-                      {checkedCount}/{checklist.length}
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onChecklistTypeChange('contrapiso')}
-                  className={`
-          flex-1 py-3 px-4 text-sm font-semibold transition-all
-          border-l border-blue-300 dark:border-blue-700
-          flex flex-col items-center justify-center gap-1
-          ${
-            selectedChecklistType === 'contrapiso'
-              ? 'bg-blue-600 text-white shadow-inner'
-              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-          }
-        `}
-                >
-                  <span>Contrapiso</span>
-
-                  {selectedChecklistType === 'contrapiso' && (
-                    <span
-                      className={`
-              text-xs px-2 py-0.5 rounded-full font-semibold
-              ${
-                checkedCount === checklist.length && checklist.length > 0
-                  ? 'bg-green-500 text-white'
-                  : 'bg-white/20 text-white'
-              }
-            `}
-                    >
-                      {checkedCount}/{checklist.length}
-                    </span>
-                  )}
-                </button>
+                      <span
+                        className={`
+                          text-xs px-2 py-0.5 rounded-full font-semibold transition-opacity
+                          ${isSelected ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+                          ${isFinished && isSelected ? 'bg-green-500 text-white' : 'bg-white/20 text-white'}
+                        `}
+                      >
+                        {checkedCount}/{checklist.length}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
 
               <input
