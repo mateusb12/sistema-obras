@@ -75,6 +75,14 @@ export function InspectionPage() {
   const formData = watch()
 
   useEffect(() => {
+    const location = formData.header.location
+
+    if (!location) return
+
+    setValue('header.title', `Inspeção ${location}`)
+  }, [formData.header.location])
+
+  useEffect(() => {
     const inspectionId = getInspectionInEditionId()
     if (!inspectionId) return
 
