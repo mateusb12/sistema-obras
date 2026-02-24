@@ -38,6 +38,20 @@ function formatDate(dateValue: string): string {
   return new Date(`${dateValue}T00:00:00`).toLocaleDateString('pt-BR')
 }
 
+function formatReinspectionDate(value: string): string {
+  const date = new Date(`${value}T00:00:00`)
+
+  const day = String(date.getDate()).padStart(2, '0')
+
+  const month = date
+    .toLocaleString('pt-BR', { month: 'short' })
+    .replace('.', '')
+
+  const year = date.getFullYear()
+
+  return `${day}-${month}-${year}`
+}
+
 export function HistoryPage() {
   const [titleFilter, setTitleFilter] = useState('')
   const [selectedProject, setSelectedProject] = useState('')
@@ -352,16 +366,55 @@ export function HistoryPage() {
                     Não-conformidades ({failItems.length})
                   </p>
                   <ul className="mt-1 list-disc pl-5 text-red-700 dark:text-red-300">
-                    {failItems.map((item) => (
-                      <li key={item.id}>
-                        {item.description} — Tratativa:{' '}
-                        {item.failResolution === 'non_conform'
-                          ? 'Aceitar como está'
-                          : item.failResolution === 'needs_correction'
-                            ? 'Solicitar correção'
-                            : 'Não definida'}
-                      </li>
-                    ))}
+                    {failItems.map((item) => {
+                      const isValidated =
+                        item.reinspectionResult === 'effective'
+
+                      return (
+                        <li key={item.id} className="mb-3">
+                          <p className="font-semibold text-red-700 dark:text-red-300">
+                            {item.description}
+                          </p>
+
+                          {isValidated ? (
+                            <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                              <p className="text-green-700 dark:text-green-300 font-medium">
+                                ✓ Correção validada
+                              </p>
+
+                              {item.correctionPlan && (
+                                <p>
+                                  <span className="font-medium">
+                                    Plano executado:
+                                  </span>{' '}
+                                  {item.correctionPlan}
+                                </p>
+                              )}
+
+                              {item.reinspectionDate && (
+                                <p>
+                                  <span className="font-medium">
+                                    Data da reinspeção:
+                                  </span>{' '}
+                                  {formatReinspectionDate(
+                                    item.reinspectionDate,
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                              <span className="font-medium">Tratativa:</span>{' '}
+                              {item.failResolution === 'non_conform'
+                                ? 'Aceitar como está'
+                                : item.failResolution === 'needs_correction'
+                                  ? 'Solicitar correção'
+                                  : 'Não definida'}
+                            </p>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 </div>
               )}
